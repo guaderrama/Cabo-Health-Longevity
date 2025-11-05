@@ -1,0 +1,20 @@
+Cabo Health Application Deployment
+
+Deployment Date: 2025-11-04 01:19:11
+Public URL: https://385xosci4xmk.space.minimax.io
+Project Type: WebApps
+Status: Successfully Deployed
+
+Features Available for Testing:
+- User registration and authentication
+- Patient and Doctor role selection
+- Dashboard interfaces for both user types
+- PDF upload functionality
+- Biomarker analysis interface
+- Results visualization
+- Medical report processing
+
+Note: This is a frontend deployment. Backend functionality requires proper Supabase configuration.
+The AI analysis features and database operations are simulated for demonstration purposes.
+
+Security: Hardcoded credentials have been replaced with environment variables for production deployment.

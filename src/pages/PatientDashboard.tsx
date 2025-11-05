@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Analysis, Report } from '@/lib/supabase';
+import { toast } from '@/lib/toast';
 import { Upload, FileText, CheckCircle, Clock, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -119,12 +120,12 @@ export default function PatientDashboard() {
 
       if (error) throw error;
 
-      alert('Análisis subido exitosamente. Será revisado por su médico.');
+      toast.success('Análisis subido exitosamente', 'Será revisado por su médico.');
       setSelectedFile(null);
       await loadAnalyses();
     } catch (error: any) {
       console.error('Error subiendo archivo:', error);
-      alert('Error al subir el archivo: ' + (error.message || 'Por favor intente nuevamente'));
+      toast.error('Error al subir el archivo', error.message || 'Por favor intente nuevamente');
     } finally {
       setUploading(false);
     }

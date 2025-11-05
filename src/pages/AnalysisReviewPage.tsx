@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, Analysis, Report } from '@/lib/supabase';
+import { toast } from '@/lib/toast';
 import { ArrowLeft, Check, FileText } from 'lucide-react';
 
 export default function AnalysisReviewPage() {
@@ -79,11 +80,11 @@ export default function AnalysisReviewPage() {
 
       if (error) throw error;
 
-      alert('Análisis aprobado y enviado al paciente');
+      toast.success('Análisis aprobado', 'El reporte ha sido enviado al paciente');
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Error aprobando análisis:', error);
-      alert('Error al aprobar: ' + (error.message || 'Por favor intente nuevamente'));
+      toast.error('Error al aprobar análisis', error.message || 'Por favor intente nuevamente');
     } finally {
       setSubmitting(false);
     }

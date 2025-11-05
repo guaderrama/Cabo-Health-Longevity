@@ -56,7 +56,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  cacheDir: 'C:/Temp/vite-cache',
+  cacheDir: '.vite-cache',
   optimizeDeps: {
     force: true,
     esbuildOptions: {

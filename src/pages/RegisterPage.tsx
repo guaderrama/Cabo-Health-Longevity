@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Activity, UserCircle, Stethoscope } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -199,12 +199,12 @@ export default function RegisterPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a
-            href="/login"
+          <Link
+            to="/login"
             className="text-primary-600 hover:text-primary-700 font-medium"
           >
             ¿Ya tienes cuenta? Inicia sesión
-          </a>
+          </Link>
         </div>
       </div>
     </div>

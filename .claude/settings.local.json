@@ -5,7 +5,9 @@
       "Bash(vite.config.ts)",
       "Bash(pnpm-lock.yaml)",
       "Bash(/dev/null)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(pnpm run build:*)",
+      "Bash(\"/c/Users/admin/AppData/Roaming/npm/pnpm\" run build)"
     ],
     "deny": [],
     "ask": []

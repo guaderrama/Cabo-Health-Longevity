@@ -1,0 +1,8 @@
+{
+  "buildCommand": "pnpm install --prefer-offline && vite build --mode production",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "installCommand": "pnpm install --prefer-offline",
+  "devCommand": "vite",
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet ."
+}

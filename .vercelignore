@@ -1,0 +1,48 @@
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+src/__tests__
+__tests__
+*.test.*
+*.spec.*
+
+# Development files
+jest.config.js
+playwright.config.ts
+tsconfig.json
+tsconfig.build.json
+
+# Documentation
+*.md
+docs/
+
+# Git files
+.git
+.gitignore
+
+# Node modules (Vercel installs these)
+node_modules
+.pnpm-store
+
+# Source control
+.github
+
+# IDE files
+.vscode
+.idea
+
+# Temporary files
+*.log
+.DS_Store
+*.tmp
+
+# Claude files
+.claude
+CLAUDE.md
+
+# Test data
+cabo-health/
+test-production-app.js
+PRODUCTION_TEST_REPORT.md

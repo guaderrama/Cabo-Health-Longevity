@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "src/__tests__/**/*",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "jest.config.js",
+    "playwright.config.ts",
+    "vite.config.ts"
+  ],
+  "compilerOptions": {
+    "noEmit": false,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": false
+  }
+}

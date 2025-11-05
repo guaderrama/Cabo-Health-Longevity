@@ -1,5 +1,5 @@
 {
-  "buildCommand": "vite build",
+  "buildCommand": "pnpm install --prefer-offline && vite build",
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "pnpm install --prefer-offline",

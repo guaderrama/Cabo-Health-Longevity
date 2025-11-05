@@ -1,75 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Analysis, Report } from '@/lib/supabase';
-import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download } from 'lucide-react';
+import { useAnalyses } from '@/hooks/useAnalyses';
+import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-interface AnalysisWithReport extends Analysis {
-  report?: Report;
-  patient?: { name: string; email: string };
-}
+import { sanitizeText } from '@/lib/sanitize';
 
 export default function DoctorDashboard() {
   const { userId } = useAuth();
-  const [analyses, setAnalyses] = useState<AnalysisWithReport[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (userId) {
-      loadAnalyses();
-    }
-  }, [userId, filter]);
-
-  async function loadAnalyses() {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('analyses')
-        .select('*')
-        .order('uploaded_at', { ascending: false });
-
-      if (filter === 'pending') {
-        query = query.eq('status', 'pending');
-      } else if (filter === 'approved') {
-        query = query.eq('status', 'approved');
-      }
-
-      const { data: analysesData, error } = await query;
-
-      if (error) throw error;
-
-      // Cargar reportes y pacientes
-      const analysesWithDetails = await Promise.all(
-        (analysesData || []).map(async (analysis) => {
-          const { data: reportData } = await supabase
-            .from('reports')
-            .select('*')
-            .eq('analysis_id', analysis.id)
-            .maybeSingle();
-
-          const { data: patientData } = await supabase
-            .from('patients')
-            .select('name, email')
-            .eq('id', analysis.patient_id)
-            .maybeSingle();
-
-          return {
-            ...analysis,
-            report: reportData || undefined,
-            patient: patientData || undefined,
-          };
-        })
-      );
-
-      setAnalyses(analysesWithDetails);
-    } catch (error) {
-      console.error('Error cargando análisis:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Usar el hook optimizado que hace una sola query con JOIN
+  const {
+    analyses,
+    loading,
+    error,
+    refresh,
+    page,
+    totalPages,
+    nextPage,
+    previousPage,
+    goToPage,
+    hasNextPage,
+    hasPreviousPage
+  } = useAnalyses({
+    userId,
+    filter,
+    userType: 'doctor',
+    pageSize: 10
+  });
 
   function getStatusBadge(status: string) {
     const badges = {
@@ -147,7 +106,19 @@ export default function DoctorDashboard() {
         </div>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-red-900 mb-2">Error al cargar análisis</h3>
+          <p className="text-red-700 mb-4">{error.message}</p>
+          <button
+            onClick={refresh}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
         </div>
@@ -223,12 +194,89 @@ export default function DoctorDashboard() {
               {analysis.report?.ai_analysis && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-700 line-clamp-3">
-                    {analysis.report.ai_analysis.substring(0, 200)}...
+                    {sanitizeText(analysis.report.ai_analysis).substring(0, 200)}...
                   </p>
                 </div>
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 sm:px-6 rounded-lg shadow">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={previousPage}
+              disabled={!hasPreviousPage}
+              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={nextPage}
+              disabled={!hasNextPage}
+              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Página <span className="font-medium">{page + 1}</span> de{' '}
+                <span className="font-medium">{totalPages}</span>
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={previousPage}
+                  disabled={!hasPreviousPage}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                {/* Números de página */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = i;
+                  } else if (page < 2) {
+                    pageNumber = i;
+                  } else if (page > totalPages - 3) {
+                    pageNumber = totalPages - 5 + i;
+                  } else {
+                    pageNumber = page - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => goToPage(pageNumber)}
+                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                        page === pageNumber
+                          ? 'z-10 bg-primary-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600'
+                          : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                      }`}
+                    >
+                      {pageNumber + 1}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={nextPage}
+                  disabled={!hasNextPage}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       )}
     </div>

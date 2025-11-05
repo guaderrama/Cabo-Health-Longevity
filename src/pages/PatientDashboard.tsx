@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { AnalysisWithReport } from '@/types';
+import { useAnalyses } from '@/hooks/useAnalyses';
 import { toast } from '@/lib/toast';
-import { Upload, FileText, CheckCircle, Clock, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -31,50 +31,28 @@ ChartJS.register(
 
 export default function PatientDashboard() {
   const { userId } = useAuth();
-  const [analyses, setAnalyses] = useState<AnalysisWithReport[]>([]);
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    if (userId) {
-      loadAnalyses();
-    }
-  }, [userId]);
-
-  async function loadAnalyses() {
-    setLoading(true);
-    try {
-      const { data: analysesData, error } = await supabase
-        .from('analyses')
-        .select('*')
-        .eq('patient_id', userId)
-        .order('uploaded_at', { ascending: false });
-
-      if (error) throw error;
-
-      const analysesWithReports = await Promise.all(
-        (analysesData || []).map(async (analysis) => {
-          const { data: reportData } = await supabase
-            .from('reports')
-            .select('*')
-            .eq('analysis_id', analysis.id)
-            .maybeSingle();
-
-          return {
-            ...analysis,
-            report: reportData || undefined,
-          };
-        })
-      );
-
-      setAnalyses(analysesWithReports);
-    } catch (error) {
-      console.error('Error cargando análisis:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Usar el hook optimizado para evitar N+1 queries
+  const {
+    analyses,
+    loading,
+    error,
+    refresh,
+    page,
+    totalPages,
+    nextPage,
+    previousPage,
+    goToPage,
+    hasNextPage,
+    hasPreviousPage
+  } = useAnalyses({
+    userId,
+    filter: 'all',
+    userType: 'patient',
+    pageSize: 10
+  });
 
   async function handleFileUpload() {
     if (!selectedFile || !userId) return;
@@ -120,7 +98,7 @@ export default function PatientDashboard() {
 
       toast.success('Análisis subido exitosamente', 'Será revisado por su médico.');
       setSelectedFile(null);
-      await loadAnalyses();
+      await refresh();
     } catch (error) {
       console.error('Error subiendo archivo:', error);
       const errorMessage = error instanceof Error ? error.message : 'Por favor intente nuevamente';
@@ -263,7 +241,19 @@ export default function PatientDashboard() {
           <h2 className="text-xl font-semibold text-gray-900">Mis Análisis</h2>
         </div>
         <div className="divide-y divide-gray-200">
-          {loading ? (
+          {error ? (
+            <div className="p-12 text-center">
+              <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-3" />
+              <h3 className="text-lg font-medium text-red-900 mb-2">Error al cargar análisis</h3>
+              <p className="text-red-700 mb-4">{error.message}</p>
+              <button
+                onClick={refresh}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : loading ? (
             <div className="p-12 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
             </div>
@@ -314,6 +304,83 @@ export default function PatientDashboard() {
           )}
         </div>
       </div>
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 sm:px-6 rounded-lg shadow">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={previousPage}
+              disabled={!hasPreviousPage}
+              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={nextPage}
+              disabled={!hasNextPage}
+              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Siguiente
+            </button>
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Página <span className="font-medium">{page + 1}</span> de{' '}
+                <span className="font-medium">{totalPages}</span>
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={previousPage}
+                  disabled={!hasPreviousPage}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                {/* Números de página */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = i;
+                  } else if (page < 2) {
+                    pageNumber = i;
+                  } else if (page > totalPages - 3) {
+                    pageNumber = totalPages - 5 + i;
+                  } else {
+                    pageNumber = page - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => goToPage(pageNumber)}
+                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                        page === pageNumber
+                          ? 'z-10 bg-primary-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600'
+                          : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                      }`}
+                    >
+                      {pageNumber + 1}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={nextPage}
+                  disabled={!hasNextPage}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

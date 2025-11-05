@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, Analysis, Report } from '@/lib/supabase';
 import { ArrowLeft, Download, FileText, AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { sanitizeRichContent, useSanitizedHTML } from '@/lib/sanitize';
 
 export default function PatientReportPage() {
   const { id } = useParams();
@@ -155,9 +156,10 @@ export default function PatientReportPage() {
               Análisis Automatizado
             </h2>
             <div className="bg-gray-50 rounded-lg p-6">
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                {report.ai_analysis}
-              </p>
+              <div
+                className="text-gray-700 whitespace-pre-wrap leading-relaxed"
+                dangerouslySetInnerHTML={useSanitizedHTML(report.ai_analysis, true)}
+              />
             </div>
           </div>
         )}
@@ -170,9 +172,10 @@ export default function PatientReportPage() {
               Revisión Médica
             </h2>
             <div className="bg-primary-50 border-l-4 border-primary-600 rounded-lg p-6">
-              <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-                {report.doctor_notes}
-              </p>
+              <div
+                className="text-gray-800 whitespace-pre-wrap leading-relaxed"
+                dangerouslySetInnerHTML={useSanitizedHTML(report.doctor_notes, true)}
+              />
             </div>
           </div>
         )}
@@ -185,9 +188,10 @@ export default function PatientReportPage() {
               Recomendaciones
             </h2>
             <div className="bg-warning-light border-l-4 border-warning rounded-lg p-6">
-              <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-                {report.recommendations}
-              </p>
+              <div
+                className="text-gray-800 whitespace-pre-wrap leading-relaxed"
+                dangerouslySetInnerHTML={useSanitizedHTML(report.recommendations, true)}
+              />
             </div>
           </div>
         )}

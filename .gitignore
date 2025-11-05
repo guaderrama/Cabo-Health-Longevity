@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+npm-lock.yaml
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Cache directories
+.cache/
+.vite/
+C:/Temp/vite-cache/
+.turbo/
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.code-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Development
+.env.development.local
+debug/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Application specific
+.claude.zip
+.browser_screenshots/
+nul
+*.bak
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# Embedded repositories
+cabo-health/
+hia/
+cabo-health-fixed/
+
+# Configuration files with secrets
+CONFIGURACION_MCP_VSCODE.json
+mcp.json.json
+.claude/SECURITY_TOKEN_ROTATION.md
+.claude/memory/NOTES.md (partial)

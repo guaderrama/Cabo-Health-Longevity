@@ -1,0 +1,55 @@
+{
+  "todos": {
+    "Coordinator": {
+      "1": {
+        "id": "1",
+        "content": "Set up Supabase Database Schema",
+        "details": "Create all necessary tables: doctors, patients, analyses, biomarkers, biomarker_results, reports, notifications. Include proper foreign keys, indexes, and constraints.",
+        "status": "pending",
+        "priority": "high"
+      },
+      "2": {
+        "id": "2",
+        "content": "Configure Row Level Security (RLS) Policies",
+        "details": "Set up security policies for each table to ensure doctors and patients can only access their relevant data. Enable RLS and create appropriate policies.",
+        "status": "pending",
+        "priority": "high"
+      },
+      "3": {
+        "id": "3",
+        "content": "Create Storage Bucket for Medical PDFs",
+        "details": "Set up Supabase storage bucket with appropriate security policies for storing medical reports while maintaining privacy.",
+        "status": "pending",
+        "priority": "high"
+      },
+      "4": {
+        "id": "4",
+        "content": "Develop Edge Functions",
+        "details": "Create two edge functions: 1) process-pdf (extract and analyze lab reports) 2) generate-report (finalize analysis with doctor approval). Include GROQ API integration for AI analysis.",
+        "status": "pending",
+        "priority": "high"
+      },
+      "5": {
+        "id": "5",
+        "content": "Request and Configure GROQ API Key",
+        "details": "Get GROQ API key from user for AI analysis functionality in edge functions. Add to Supabase secrets.",
+        "status": "pending",
+        "priority": "high"
+      },
+      "6": {
+        "id": "6",
+        "content": "Create Test User Accounts",
+        "details": "Create two test accounts: Doctor (jonathan@cabohealth.com, password: Doctor123!) and Patient (pamela.test@gmail.com, password: Patient123!) with proper profile data.",
+        "status": "pending",
+        "priority": "high"
+      },
+      "7": {
+        "id": "7",
+        "content": "Deploy Backend to Supabase",
+        "details": "Deploy all components to the existing Supabase project (https://holtohiphaokzshtpyku.supabase.co) and verify all functionality works end-to-end.",
+        "status": "pending",
+        "priority": "high"
+      }
+    }
+  }
+}

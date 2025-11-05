@@ -1,0 +1,187 @@
+[
+  {
+    "path": ".env.example",
+    "abs_path": "/workspace/cabo-health/.env.example",
+    "size": 259
+  },
+  {
+    "path": ".gitignore",
+    "abs_path": "/workspace/cabo-health/.gitignore",
+    "size": 848
+  },
+  {
+    "path": ".npmrc",
+    "abs_path": "/workspace/cabo-health/.npmrc",
+    "size": 68
+  },
+  {
+    "path": "LICENSE",
+    "abs_path": "/workspace/cabo-health/LICENSE",
+    "size": 1610
+  },
+  {
+    "path": "README.md",
+    "abs_path": "/workspace/cabo-health/README.md",
+    "size": 4987
+  },
+  {
+    "path": "components.json",
+    "abs_path": "/workspace/cabo-health/components.json",
+    "size": 441
+  },
+  {
+    "path": "eslint.config.js",
+    "abs_path": "/workspace/cabo-health/eslint.config.js",
+    "size": 835
+  },
+  {
+    "path": "index.html",
+    "abs_path": "/workspace/cabo-health/index.html",
+    "size": 253
+  },
+  {
+    "path": "package.json",
+    "abs_path": "/workspace/cabo-health/package.json",
+    "size": 3183
+  },
+  {
+    "path": "pnpm-lock.yaml",
+    "abs_path": "/workspace/cabo-health/pnpm-lock.yaml",
+    "size": 210274
+  },
+  {
+    "path": "postcss.config.js",
+    "abs_path": "/workspace/cabo-health/postcss.config.js",
+    "size": 80
+  },
+  {
+    "path": "public/use.txt",
+    "abs_path": "/workspace/cabo-health/public/use.txt",
+    "size": 30
+  },
+  {
+    "path": "src/App.css",
+    "abs_path": "/workspace/cabo-health/src/App.css",
+    "size": 548
+  },
+  {
+    "path": "src/App.tsx",
+    "abs_path": "/workspace/cabo-health/src/App.tsx",
+    "size": 3070
+  },
+  {
+    "path": "src/components/ErrorBoundary.tsx",
+    "abs_path": "/workspace/cabo-health/src/components/ErrorBoundary.tsx",
+    "size": 875
+  },
+  {
+    "path": "src/components/biomarkers/BiomarkerCard.tsx",
+    "abs_path": "/workspace/cabo-health/src/components/biomarkers/BiomarkerCard.tsx",
+    "size": 4063
+  },
+  {
+    "path": "src/components/biomarkers/BiomarkerSummary.tsx",
+    "abs_path": "/workspace/cabo-health/src/components/biomarkers/BiomarkerSummary.tsx",
+    "size": 7522
+  },
+  {
+    "path": "src/components/common/DashboardLayout.tsx",
+    "abs_path": "/workspace/cabo-health/src/components/common/DashboardLayout.tsx",
+    "size": 2718
+  },
+  {
+    "path": "src/contexts/AuthContext.tsx",
+    "abs_path": "/workspace/cabo-health/src/contexts/AuthContext.tsx",
+    "size": 3752
+  },
+  {
+    "path": "src/hooks/use-mobile.tsx",
+    "abs_path": "/workspace/cabo-health/src/hooks/use-mobile.tsx",
+    "size": 565
+  },
+  {
+    "path": "src/index.css",
+    "abs_path": "/workspace/cabo-health/src/index.css",
+    "size": 839
+  },
+  {
+    "path": "src/lib/supabase.ts",
+    "abs_path": "/workspace/cabo-health/src/lib/supabase.ts",
+    "size": 1608
+  },
+  {
+    "path": "src/lib/utils.ts",
+    "abs_path": "/workspace/cabo-health/src/lib/utils.ts",
+    "size": 164
+  },
+  {
+    "path": "src/main.tsx",
+    "abs_path": "/workspace/cabo-health/src/main.tsx",
+    "size": 336
+  },
+  {
+    "path": "src/pages/AnalysisReviewPage.tsx",
+    "abs_path": "/workspace/cabo-health/src/pages/AnalysisReviewPage.tsx",
+    "size": 8550
+  },
+  {
+    "path": "src/pages/DoctorDashboard.tsx",
+    "abs_path": "/workspace/cabo-health/src/pages/DoctorDashboard.tsx",
+    "size": 8659
+  },
+  {
+    "path": "src/pages/FunctionalAnalysisPage.tsx",
+    "abs_path": "/workspace/cabo-health/src/pages/FunctionalAnalysisPage.tsx",
+    "size": 11170
+  },
+  {
+    "path": "src/pages/LoginPage.tsx",
+    "abs_path": "/workspace/cabo-health/src/pages/LoginPage.tsx",
+    "size": 3488
+  },
+  {
+    "path": "src/pages/PatientDashboard.tsx",
+    "abs_path": "/workspace/cabo-health/src/pages/PatientDashboard.tsx",
+    "size": 11052
+  },
+  {
+    "path": "src/pages/PatientReportPage.tsx",
+    "abs_path": "/workspace/cabo-health/src/pages/PatientReportPage.tsx",
+    "size": 7417
+  },
+  {
+    "path": "src/pages/RegisterPage.tsx",
+    "abs_path": "/workspace/cabo-health/src/pages/RegisterPage.tsx",
+    "size": 8096
+  },
+  {
+    "path": "src/vite-env.d.ts",
+    "abs_path": "/workspace/cabo-health/src/vite-env.d.ts",
+    "size": 38
+  },
+  {
+    "path": "tailwind.config.js",
+    "abs_path": "/workspace/cabo-health/tailwind.config.js",
+    "size": 2101
+  },
+  {
+    "path": "tsconfig.app.json",
+    "abs_path": "/workspace/cabo-health/tsconfig.app.json",
+    "size": 984
+  },
+  {
+    "path": "tsconfig.json",
+    "abs_path": "/workspace/cabo-health/tsconfig.json",
+    "size": 234
+  },
+  {
+    "path": "tsconfig.node.json",
+    "abs_path": "/workspace/cabo-health/tsconfig.node.json",
+    "size": 593
+  },
+  {
+    "path": "vite.config.ts",
+    "abs_path": "/workspace/cabo-health/vite.config.ts",
+    "size": 491
+  }
+]

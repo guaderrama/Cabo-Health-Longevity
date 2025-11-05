@@ -1,22 +1,27 @@
 import React from 'react';
 
-const serializeError = (error: any) => {
+const serializeError = (error: unknown) => {
   if (error instanceof Error) {
     return error.message + '\n' + error.stack;
   }
   return JSON.stringify(error, null, 2);
 };
 
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: unknown;
+}
+
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
-  { hasError: boolean; error: any }
+  ErrorBoundaryState
 > {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: unknown) {
     return { hasError: true, error };
   }
 

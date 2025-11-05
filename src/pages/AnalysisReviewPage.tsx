@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase, Analysis, Report } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { Analysis, Report, Patient, AppError } from '@/types';
 import { toast } from '@/lib/toast';
 import { ArrowLeft, Check, FileText } from 'lucide-react';
 
@@ -9,7 +10,7 @@ export default function AnalysisReviewPage() {
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [report, setReport] = useState<Report | null>(null);
-  const [patient, setPatient] = useState<any>(null);
+  const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -82,9 +83,10 @@ export default function AnalysisReviewPage() {
 
       toast.success('Análisis aprobado', 'El reporte ha sido enviado al paciente');
       navigate('/dashboard');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error aprobando análisis:', error);
-      toast.error('Error al aprobar análisis', error.message || 'Por favor intente nuevamente');
+      const errorMessage = error instanceof Error ? error.message : 'Por favor intente nuevamente';
+      toast.error('Error al aprobar análisis', errorMessage);
     } finally {
       setSubmitting(false);
     }

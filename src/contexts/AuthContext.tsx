@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -7,10 +7,31 @@ interface AuthContextType {
   userRole: 'doctor' | 'patient' | null;
   userId: string | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, role: 'doctor' | 'patient', additionalData: any) => Promise<{ error: any }>;
+  error: Error | null;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    role: 'doctor' | 'patient',
+    additionalData: SignUpData
+  ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  refreshUserRole: () => Promise<void>;
 }
+
+interface DoctorSignUpData {
+  name: string;
+  specialty?: string;
+  license_number?: string;
+}
+
+interface PatientSignUpData {
+  name: string;
+  birth_date?: string;
+  gender?: string;
+}
+
+type SignUpData = DoctorSignUpData | PatientSignUpData;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -19,125 +40,266 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<'doctor' | 'patient' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Prevent race conditions and multiple simultaneous role loads
+  const loadingRoleRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    // Cargar usuario inicial
-    async function loadUser() {
-      setLoading(true);
+    isMountedRef.current = true;
+
+    async function initAuth() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUser(user);
-          await loadUserRole(user.id);
+        setLoading(true);
+        setError(null);
+
+        // Use getSession instead of getUser for better reliability
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        if (session?.user && isMountedRef.current) {
+          setUser(session.user);
+          await loadUserRole(session.user.id);
+        }
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+        if (isMountedRef.current) {
+          setError(err as Error);
         }
       } finally {
-        setLoading(false);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
     }
-    loadUser();
 
-    // Listener de cambios de autenticación
+    initAuth();
+
+    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        if (!isMountedRef.current) return;
+
+        console.log('Auth state changed:', event);
+
         const currentUser = session?.user || null;
         setUser(currentUser);
+
         if (currentUser) {
           await loadUserRole(currentUser.id);
         } else {
+          // User signed out
           setUserRole(null);
           setUserId(null);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMountedRef.current = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  async function loadUserRole(authUserId: string) {
-    // Buscar en tabla de doctores
-    const { data: doctorData } = await supabase
-      .from('doctors')
-      .select('id')
-      .eq('id', authUserId)
-      .maybeSingle();
-
-    if (doctorData) {
-      setUserRole('doctor');
-      setUserId(doctorData.id);
+  async function loadUserRole(authUserId: string): Promise<void> {
+    // Prevent multiple simultaneous loads
+    if (loadingRoleRef.current) {
+      console.log('Role load already in progress, skipping...');
       return;
     }
 
-    // Buscar en tabla de pacientes
-    const { data: patientData } = await supabase
-      .from('patients')
-      .select('id')
-      .eq('id', authUserId)
-      .maybeSingle();
+    loadingRoleRef.current = true;
 
-    if (patientData) {
-      setUserRole('patient');
-      setUserId(patientData.id);
-      return;
+    try {
+      // Check doctors table
+      const { data: doctorData, error: doctorError } = await supabase
+        .from('doctors')
+        .select('id')
+        .eq('id', authUserId)
+        .maybeSingle();
+
+      if (doctorError && doctorError.code !== 'PGRST116') {
+        // PGRST116 = no rows returned, which is fine
+        throw doctorError;
+      }
+
+      if (doctorData && isMountedRef.current) {
+        setUserRole('doctor');
+        setUserId(doctorData.id);
+        return;
+      }
+
+      // Check patients table
+      const { data: patientData, error: patientError } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('id', authUserId)
+        .maybeSingle();
+
+      if (patientError && patientError.code !== 'PGRST116') {
+        throw patientError;
+      }
+
+      if (patientData && isMountedRef.current) {
+        setUserRole('patient');
+        setUserId(patientData.id);
+        return;
+      }
+
+      // User exists in auth but not in application tables
+      console.warn(
+        'User authenticated but not found in doctors or patients tables:',
+        authUserId
+      );
+
+      if (isMountedRef.current) {
+        setUserRole(null);
+        setUserId(null);
+        setError(new Error('User profile not found. Please contact support.'));
+      }
+    } catch (err) {
+      console.error('Error loading user role:', err);
+
+      if (isMountedRef.current) {
+        setUserRole(null);
+        setUserId(null);
+        setError(err as Error);
+      }
+    } finally {
+      loadingRoleRef.current = false;
     }
-
-    setUserRole(null);
-    setUserId(null);
   }
 
-  async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
-  }
+  async function signIn(
+    email: string,
+    password: string
+  ): Promise<{ error: Error | null }> {
+    try {
+      setError(null);
 
-  async function signUp(email: string, password: string, role: 'doctor' | 'patient', additionalData: any) {
-    // Crear usuario en Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error || !data.user) {
-      return { error };
-    }
-
-    // Insertar en tabla correspondiente
-    const table = role === 'doctor' ? 'doctors' : 'patients';
-    const { error: insertError } = await supabase
-      .from(table)
-      .insert({
-        id: data.user.id,
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        ...additionalData
+        password,
       });
 
-    if (insertError) {
-      return { error: insertError };
+      if (error) {
+        return { error };
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: err as Error };
     }
-
-    return { error: null };
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    setUser(null);
-    setUserRole(null);
-    setUserId(null);
+  async function signUp(
+    email: string,
+    password: string,
+    role: 'doctor' | 'patient',
+    additionalData: SignUpData
+  ): Promise<{ error: Error | null }> {
+    try {
+      setError(null);
+
+      // Validate required data
+      if (!additionalData.name || additionalData.name.trim() === '') {
+        return { error: new Error('Name is required') };
+      }
+
+      // Create user in Supabase Auth
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role,
+            name: additionalData.name,
+          },
+        },
+      });
+
+      if (authError) {
+        return { error: authError };
+      }
+
+      if (!data.user) {
+        return { error: new Error('Failed to create user') };
+      }
+
+      // Insert into corresponding table
+      const table = role === 'doctor' ? 'doctors' : 'patients';
+      const { error: insertError } = await supabase.from(table).insert({
+        id: data.user.id,
+        email,
+        ...additionalData,
+      });
+
+      if (insertError) {
+        console.error('Failed to create user profile, attempting cleanup...');
+
+        // Try to sign out to prevent orphaned state
+        await supabase.auth.signOut();
+
+        return {
+          error: new Error(
+            'Failed to create user profile. Please try again or contact support.'
+          ),
+        };
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: err as Error };
+    }
   }
 
-  return (
-    <AuthContext.Provider value={{ user, userRole, userId, loading, signIn, signUp, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  async function signOut(): Promise<void> {
+    try {
+      await supabase.auth.signOut();
+
+      if (isMountedRef.current) {
+        setUser(null);
+        setUserRole(null);
+        setUserId(null);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Sign out error:', err);
+      if (isMountedRef.current) {
+        setError(err as Error);
+      }
+    }
+  }
+
+  async function refreshUserRole(): Promise<void> {
+    if (user?.id) {
+      await loadUserRole(user.id);
+    }
+  }
+
+  const value = {
+    user,
+    userRole,
+    userId,
+    loading,
+    error,
+    signIn,
+    signUp,
+    signOut,
+    refreshUserRole,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

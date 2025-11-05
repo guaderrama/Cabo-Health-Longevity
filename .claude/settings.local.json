@@ -7,7 +7,8 @@
       "Bash(/dev/null)",
       "Bash(git checkout:*)",
       "Bash(pnpm run build:*)",
-      "Bash(\"/c/Users/admin/AppData/Roaming/npm/pnpm\" run build)"
+      "Bash(\"/c/Users/admin/AppData/Roaming/npm/pnpm\" run build)",
+      "Bash(node test-production-app.js:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,29 +1,74 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Activity, UserCircle, Stethoscope } from 'lucide-react';
+import { Activity, UserCircle, Stethoscope, Check, X } from 'lucide-react';
+import { validatePassword, validateEmail, type PasswordValidationResult } from '@/lib/validation';
+import { PASSWORD_RULES } from '@/constants';
 
 export default function RegisterPage() {
   const [role, setRole] = useState<'doctor' | 'patient'>('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  
+
   // Campos específicos
   const [specialty, setSpecialty] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('');
-  
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult | null>(null);
+  const [emailError, setEmailError] = useState('');
+  const [showPasswordHints, setShowPasswordHints] = useState(false);
+
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+
+    if (newPassword) {
+      const validation = validatePassword(newPassword);
+      setPasswordValidation(validation);
+    } else {
+      setPasswordValidation(null);
+    }
+  }
+
+  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+
+    if (newEmail && !validateEmail(newEmail)) {
+      setEmailError('Por favor ingrese un correo electrónico válido');
+    } else {
+      setEmailError('');
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Validar email
+    if (!validateEmail(email)) {
+      setError('Por favor ingrese un correo electrónico válido');
+      setLoading(false);
+      return;
+    }
+
+    // Validar contraseña
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      setError(`Contraseña inválida: ${passwordCheck.errors.join(', ')}`);
+      setPasswordValidation(passwordCheck);
+      setLoading(false);
+      return;
+    }
 
     const additionalData = role === 'doctor'
       ? { name, specialty, license_number: licenseNumber }
@@ -110,10 +155,18 @@ export default function RegisterPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                  emailError ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
+              {emailError && (
+                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                  <X className="w-4 h-4" />
+                  {emailError}
+                </p>
+              )}
             </div>
           </div>
 
@@ -124,11 +177,102 @@ export default function RegisterPage() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
+              onFocus={() => setShowPasswordHints(true)}
               required
-              minLength={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              minLength={PASSWORD_RULES.MIN_LENGTH}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                passwordValidation && !passwordValidation.valid ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+
+            {/* Password strength indicator */}
+            {passwordValidation && password && (
+              <div className="mt-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${
+                        passwordValidation.strength === 'weak' ? 'w-1/4 bg-red-500' :
+                        passwordValidation.strength === 'medium' ? 'w-2/4 bg-yellow-500' :
+                        passwordValidation.strength === 'strong' ? 'w-3/4 bg-blue-500' :
+                        'w-full bg-green-500'
+                      }`}
+                    />
+                  </div>
+                  <span className={`text-xs font-medium ${
+                    passwordValidation.strength === 'weak' ? 'text-red-600' :
+                    passwordValidation.strength === 'medium' ? 'text-yellow-600' :
+                    passwordValidation.strength === 'strong' ? 'text-blue-600' :
+                    'text-green-600'
+                  }`}>
+                    {passwordValidation.strength === 'weak' ? 'Débil' :
+                     passwordValidation.strength === 'medium' ? 'Media' :
+                     passwordValidation.strength === 'strong' ? 'Fuerte' :
+                     'Muy Fuerte'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Password requirements */}
+            {(showPasswordHints || (passwordValidation && !passwordValidation.valid)) && (
+              <div className="mt-2 p-3 bg-gray-50 rounded-lg text-sm space-y-1">
+                <p className="font-medium text-gray-700 mb-2">La contraseña debe contener:</p>
+                <div className="space-y-1">
+                  <div className={`flex items-center gap-2 ${
+                    password.length >= PASSWORD_RULES.MIN_LENGTH ? 'text-green-600' : 'text-gray-600'
+                  }`}>
+                    {password.length >= PASSWORD_RULES.MIN_LENGTH ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
+                    <span>Mínimo {PASSWORD_RULES.MIN_LENGTH} caracteres</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${
+                    /[A-Z]/.test(password) ? 'text-green-600' : 'text-gray-600'
+                  }`}>
+                    {/[A-Z]/.test(password) ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
+                    <span>Una letra mayúscula</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${
+                    /[a-z]/.test(password) ? 'text-green-600' : 'text-gray-600'
+                  }`}>
+                    {/[a-z]/.test(password) ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
+                    <span>Una letra minúscula</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${
+                    /[0-9]/.test(password) ? 'text-green-600' : 'text-gray-600'
+                  }`}>
+                    {/[0-9]/.test(password) ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
+                    <span>Un número</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${
+                    new RegExp(`[${PASSWORD_RULES.SPECIAL_CHARS.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`).test(password) ? 'text-green-600' : 'text-gray-600'
+                  }`}>
+                    {new RegExp(`[${PASSWORD_RULES.SPECIAL_CHARS.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`).test(password) ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
+                    <span>Un carácter especial (!@#$%...)</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {role === 'doctor' ? (

@@ -1,20 +1,40 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Activity } from 'lucide-react';
+import { Activity, X } from 'lucide-react';
+import { validateEmail } from '@/lib/validation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+
+    if (newEmail && !validateEmail(newEmail)) {
+      setEmailError('Por favor ingrese un correo electrónico válido');
+    } else {
+      setEmailError('');
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Validar email antes de enviar
+    if (!validateEmail(email)) {
+      setError('Por favor ingrese un correo electrónico válido');
+      setLoading(false);
+      return;
+    }
 
     const { error } = await signIn(email, password);
 
@@ -57,11 +77,19 @@ export default function LoginPage() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition ${
+                emailError ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="doctor@example.com"
             />
+            {emailError && (
+              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <X className="w-4 h-4" />
+                {emailError}
+              </p>
+            )}
           </div>
 
           <div>

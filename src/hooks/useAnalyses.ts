@@ -74,16 +74,26 @@ export function useAnalyses({
         const patientIds = [...new Set(analysesData.map(a => a.patient_id))];
 
         // Cargar reports
-        const { data: reportsData } = await supabase
+        const { data: reportsData, error: reportsError } = await supabase
           .from('reports')
           .select('*')
           .in('analysis_id', analysisIds);
 
+        if (reportsError) {
+          console.error('Error fetching reports:', reportsError);
+          throw reportsError;
+        }
+
         // Cargar patients
-        const { data: patientsData } = await supabase
+        const { data: patientsData, error: patientsError } = await supabase
           .from('patients')
           .select('id, name, email, phone, birth_date, gender')
           .in('id', patientIds);
+
+        if (patientsError) {
+          console.error('Error fetching patients:', patientsError);
+          throw patientsError;
+        }
 
         // Solo actualizar si el componente sigue montado
         if (isMountedRef.current) {
@@ -163,16 +173,26 @@ export function useAnalyses({
       const patientIds = [...new Set(analysesData.map(a => a.patient_id))];
 
       // Cargar reports
-      const { data: reportsData } = await supabase
+      const { data: reportsData, error: reportsError } = await supabase
         .from('reports')
         .select('*')
         .in('analysis_id', analysisIds);
 
+      if (reportsError) {
+        console.error('Error fetching reports:', reportsError);
+        throw reportsError;
+      }
+
       // Cargar patients
-      const { data: patientsData } = await supabase
+      const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
         .select('id, name, email, phone, birth_date, gender')
         .in('id', patientIds);
+
+      if (patientsError) {
+        console.error('Error fetching patients:', patientsError);
+        throw patientsError;
+      }
 
       if (isMountedRef.current) {
         // Mapear los datos combinando analyses con sus reports y patients

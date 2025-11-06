@@ -35,34 +35,13 @@ export function useAnalyses({
       setError(null);
 
       try {
-        // OPTIMIZACIÓN: Usar JOIN en lugar de N+1 queries
-        // Esto reduce drásticamente las queries a la base de datos
+        // Cargar analyses sin JOINs para evitar problemas de relaciones
         const from = page * pageSize;
         const to = from + pageSize - 1;
 
         let query = supabase
           .from('analyses')
-          .select(`
-            *,
-            reports!inner(
-              id,
-              ai_analysis,
-              doctor_notes,
-              recommendations,
-              risk_level,
-              approved_by_doctor,
-              model_used,
-              report_pdf_url
-            ),
-            patients!inner(
-              id,
-              name,
-              email,
-              phone,
-              birth_date,
-              gender
-            )
-          `, { count: 'exact' })
+          .select('*', { count: 'exact' })
           .range(from, to)
           .order('uploaded_at', { ascending: false });
 
@@ -75,21 +54,50 @@ export function useAnalyses({
           query = query.eq('status', filter);
         }
 
-        const { data, error: fetchError, count } = await query;
+        const { data: analysesData, error: fetchError, count } = await query;
 
         if (fetchError) {
           console.error('Error fetching analyses:', fetchError);
           throw fetchError;
         }
 
+        if (!analysesData || analysesData.length === 0) {
+          if (isMountedRef.current) {
+            setAnalyses([]);
+            setTotalPages(0);
+          }
+          return;
+        }
+
+        // Obtener reports y patients por separado
+        const analysisIds = analysesData.map(a => a.id);
+        const patientIds = [...new Set(analysesData.map(a => a.patient_id))];
+
+        // Cargar reports
+        const { data: reportsData } = await supabase
+          .from('reports')
+          .select('*')
+          .in('analysis_id', analysisIds);
+
+        // Cargar patients
+        const { data: patientsData } = await supabase
+          .from('patients')
+          .select('id, name, email, phone, birth_date, gender')
+          .in('id', patientIds);
+
         // Solo actualizar si el componente sigue montado
         if (isMountedRef.current) {
-          // Mapear los datos para mantener la estructura esperada
-          const mappedData = (data || []).map(analysis => ({
-            ...analysis,
-            report: analysis.reports?.[0] || null,
-            patient: analysis.patients || null,
-          }));
+          // Mapear los datos combinando analyses con sus reports y patients
+          const mappedData = analysesData.map(analysis => {
+            const report = reportsData?.find(r => r.analysis_id === analysis.id) || null;
+            const patient = patientsData?.find(p => p.id === analysis.patient_id) || null;
+
+            return {
+              ...analysis,
+              report,
+              patient,
+            };
+          });
 
           setAnalyses(mappedData);
           setTotalPages(Math.ceil((count || 0) / pageSize));
@@ -126,24 +134,7 @@ export function useAnalyses({
 
       let query = supabase
         .from('analyses')
-        .select(`
-          *,
-          reports(
-            id,
-            ai_analysis,
-            doctor_notes,
-            recommendations,
-            risk_level,
-            approved_by_doctor,
-            model_used,
-            report_pdf_url
-          ),
-          patients(
-            id,
-            name,
-            email
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .range(from, to)
         .order('uploaded_at', { ascending: false });
 
@@ -155,16 +146,46 @@ export function useAnalyses({
         query = query.eq('status', filter);
       }
 
-      const { data, error: refreshError, count } = await query;
+      const { data: analysesData, error: refreshError, count } = await query;
 
       if (refreshError) throw refreshError;
 
+      if (!analysesData || analysesData.length === 0) {
+        if (isMountedRef.current) {
+          setAnalyses([]);
+          setTotalPages(0);
+        }
+        return;
+      }
+
+      // Obtener reports y patients por separado
+      const analysisIds = analysesData.map(a => a.id);
+      const patientIds = [...new Set(analysesData.map(a => a.patient_id))];
+
+      // Cargar reports
+      const { data: reportsData } = await supabase
+        .from('reports')
+        .select('*')
+        .in('analysis_id', analysisIds);
+
+      // Cargar patients
+      const { data: patientsData } = await supabase
+        .from('patients')
+        .select('id, name, email, phone, birth_date, gender')
+        .in('id', patientIds);
+
       if (isMountedRef.current) {
-        const mappedData = (data || []).map(analysis => ({
-          ...analysis,
-          report: analysis.reports?.[0] || null,
-          patient: analysis.patients || null,
-        }));
+        // Mapear los datos combinando analyses con sus reports y patients
+        const mappedData = analysesData.map(analysis => {
+          const report = reportsData?.find(r => r.analysis_id === analysis.id) || null;
+          const patient = patientsData?.find(p => p.id === analysis.patient_id) || null;
+
+          return {
+            ...analysis,
+            report,
+            patient,
+          };
+        });
 
         setAnalyses(mappedData);
         setTotalPages(Math.ceil((count || 0) / pageSize));

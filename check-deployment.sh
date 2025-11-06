@@ -26,12 +26,12 @@ echo ""
 echo "📊 ANÁLISIS:"
 if [ "$MAIN_COMMIT" = "$FEATURE_COMMIT" ]; then
     echo "   ✅ DEPLOYED: Los cambios están en producción"
-    echo "   🌐 URL: https://jxhuqjo1k4pr.space.minimax.io"
+    echo "   🌐 URL: https://cabo-health-longevity.vercel.app"
     echo ""
     echo "   Puedes verificar la app en línea ahora."
 elif git merge-base --is-ancestor $FEATURE_COMMIT origin/main; then
     echo "   ✅ DEPLOYED: Feature branch está incluida en main"
-    echo "   🌐 URL: https://jxhuqjo1k4pr.space.minimax.io"
+    echo "   🌐 URL: https://cabo-health-longevity.vercel.app"
 else
     echo "   ❌ NOT DEPLOYED: Los cambios NO están en producción"
     echo "   📝 ACCIÓN REQUERIDA:"

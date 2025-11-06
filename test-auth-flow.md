@@ -442,10 +442,10 @@ git push origin main
 2. **Vercel deployará automáticamente**
 
 3. **Repetir tests en producción**:
-   - URL: https://jxhuqjo1k4pr.space.minimax.io
+   - URL: https://cabo-health-longevity.vercel.app
 
 4. **Configurar Supabase para producción**:
-   - Agregar redirect URL: https://jxhuqjo1k4pr.space.minimax.io/auth/callback
+   - Agregar redirect URL: https://cabo-health-longevity.vercel.app/auth/callback
 
 ---
 

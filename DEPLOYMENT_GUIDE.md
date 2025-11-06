@@ -96,7 +96,7 @@ Antes de testear en producción, configurar en Supabase:
 
 **Para producción**:
 - Habilitar "Enable email confirmations"
-- Agregar redirect URL: `https://jxhuqjo1k4pr.space.minimax.io/auth/callback`
+- Agregar redirect URL: `https://cabo-health-longevity.vercel.app/auth/callback`
 
 ## 🔗 Links
 - Testing Plan: `test-auth-flow.md`
@@ -120,7 +120,7 @@ Una vez que hagas merge del PR:
 1. ✅ Vercel detectará el cambio en `main`
 2. ✅ Iniciará build automáticamente
 3. ✅ Deploy tomará ~2-5 minutos
-4. ✅ Estará disponible en: https://jxhuqjo1k4pr.space.minimax.io
+4. ✅ Estará disponible en: https://cabo-health-longevity.vercel.app
 
 **Monitorear deploy en**:
 - Dashboard de Vercel
@@ -134,14 +134,14 @@ Una vez deployado, verifica:
 
 #### Test Rápido #1: Cargar la App
 ```
-1. Ir a: https://jxhuqjo1k4pr.space.minimax.io
+1. Ir a: https://cabo-health-longevity.vercel.app
 2. ✅ Debe cargar página de login
 3. ✅ No debe haber errores en consola (F12)
 ```
 
 #### Test Rápido #2: Verificar Archivos Nuevos
 ```
-1. Ir a: https://jxhuqjo1k4pr.space.minimax.io/auth/callback
+1. Ir a: https://cabo-health-longevity.vercel.app/auth/callback
 2. ✅ Debe mostrar página de confirmación
 3. ✅ No debe dar 404
 ```
@@ -186,7 +186,7 @@ Una vez deployado, verifica:
 2. Authentication → Settings → Email Auth
 3. HABILITAR "Enable email confirmations"
 4. En "Redirect URLs", agregar:
-   - https://jxhuqjo1k4pr.space.minimax.io/auth/callback
+   - https://cabo-health-longevity.vercel.app/auth/callback
 5. Guardar cambios
 ```
 

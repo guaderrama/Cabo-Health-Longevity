@@ -182,7 +182,7 @@ pnpm test:coverage
 
 ## 🌐 URLs Importantes
 
-- **Frontend**: https://jxhuqjo1k4pr.space.minimax.io
+- **Frontend**: https://cabo-health-longevity.vercel.app
 - **Supabase**: https://holtohiphaokzshtpyku.supabase.co
 
 ## 📚 Documentación Adicional

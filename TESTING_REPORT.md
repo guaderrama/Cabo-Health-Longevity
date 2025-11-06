@@ -357,7 +357,7 @@ Esto permite testing rápido sin necesidad de confirmar emails.
 2. Authentication → Settings → Email Auth
 3. **HABILITAR** "Enable email confirmations"
 4. Agregar Redirect URLs:
-   - `https://jxhuqjo1k4pr.space.minimax.io/auth/callback`
+   - `https://cabo-health-longevity.vercel.app/auth/callback`
    - `http://localhost:5173/auth/callback` (para dev)
 5. Guardar
 
@@ -384,7 +384,7 @@ Monitorear en:
 
 Una vez deployado:
 ```
-URL: https://jxhuqjo1k4pr.space.minimax.io
+URL: https://cabo-health-longevity.vercel.app
 
 Repetir tests críticos:
 - Registro nuevo usuario

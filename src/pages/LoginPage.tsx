@@ -39,7 +39,20 @@ export default function LoginPage() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError('Credenciales incorrectas. Por favor intente nuevamente.');
+      let errorMessage = 'Credenciales incorrectas. Por favor intente nuevamente.';
+
+      // Provide specific error messages for better UX
+      if (error.message.includes('Email not confirmed') || error.message.includes('no ha sido confirmado')) {
+        errorMessage = 'Tu email no ha sido confirmado. Por favor revisa tu correo y confirma tu dirección de email.';
+      } else if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Email o contraseña incorrectos.';
+      } else if (error.message.includes('too many requests')) {
+        errorMessage = 'Demasiados intentos. Por favor espera unos minutos e intenta nuevamente.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
       setLoading(false);
     } else {
       navigate('/dashboard');

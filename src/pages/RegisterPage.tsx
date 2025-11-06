@@ -22,6 +22,7 @@ export default function RegisterPage() {
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult | null>(null);
   const [emailError, setEmailError] = useState('');
   const [showPasswordHints, setShowPasswordHints] = useState(false);
+  const [success, setSuccess] = useState('');
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -74,12 +75,25 @@ export default function RegisterPage() {
       ? { name, specialty, license_number: licenseNumber }
       : { name, birth_date: birthDate, gender };
 
-    const { error } = await signUp(email, password, role, additionalData);
+    const { error, needsConfirmation } = await signUp(email, password, role, additionalData);
 
     if (error) {
       setError(error.message || 'Error al crear cuenta. Por favor intente nuevamente.');
       setLoading(false);
+    } else if (needsConfirmation) {
+      // Email confirmation required
+      setError('');
+      setSuccess(
+        `✅ ¡Cuenta creada exitosamente!\n\n📧 Te hemos enviado un correo a ${email}. Por favor confirma tu dirección de email antes de iniciar sesión.`
+      );
+      setLoading(false);
+
+      // Redirect to login after 5 seconds
+      setTimeout(() => {
+        navigate('/login');
+      }, 5000);
     } else {
+      // No confirmation needed, auto-login successful
       navigate('/dashboard');
     }
   }
@@ -103,6 +117,12 @@ export default function RegisterPage() {
         {error && (
           <div className="bg-danger-light border border-danger text-danger-dark px-4 py-3 rounded-lg mb-4">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-500 text-green-800 px-4 py-3 rounded-lg mb-4 whitespace-pre-line">
+            {success}
           </div>
         )}
 

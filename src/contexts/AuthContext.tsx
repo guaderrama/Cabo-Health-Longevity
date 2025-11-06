@@ -14,7 +14,7 @@ interface AuthContextType {
     password: string,
     role: 'doctor' | 'patient',
     additionalData: SignUpData
-  ) => Promise<{ error: Error | null }>;
+  ) => Promise<{ error: Error | null; needsConfirmation?: boolean }>;
   signOut: () => Promise<void>;
   refreshUserRole: () => Promise<void>;
 }
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function loadUserRole(authUserId: string): Promise<void> {
+  async function loadUserRole(authUserId: string, retries = 3): Promise<void> {
     // Prevent multiple simultaneous loads
     if (loadingRoleRef.current) {
       console.log('Role load already in progress, skipping...');
@@ -115,42 +115,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadingRoleRef.current = true;
 
     try {
-      // Check doctors table
-      const { data: doctorData, error: doctorError } = await supabase
-        .from('doctors')
-        .select('id')
-        .eq('id', authUserId)
-        .maybeSingle();
+      // Retry logic to handle race conditions
+      for (let attempt = 0; attempt < retries; attempt++) {
+        // Check doctors table
+        const { data: doctorData, error: doctorError } = await supabase
+          .from('doctors')
+          .select('id')
+          .eq('id', authUserId)
+          .maybeSingle();
 
-      if (doctorError && doctorError.code !== 'PGRST116') {
-        // PGRST116 = no rows returned, which is fine
-        throw doctorError;
+        if (doctorError && doctorError.code !== 'PGRST116') {
+          // PGRST116 = no rows returned, which is fine
+          throw doctorError;
+        }
+
+        if (doctorData && isMountedRef.current) {
+          setUserRole('doctor');
+          setUserId(doctorData.id);
+          return;
+        }
+
+        // Check patients table
+        const { data: patientData, error: patientError } = await supabase
+          .from('patients')
+          .select('id')
+          .eq('id', authUserId)
+          .maybeSingle();
+
+        if (patientError && patientError.code !== 'PGRST116') {
+          throw patientError;
+        }
+
+        if (patientData && isMountedRef.current) {
+          setUserRole('patient');
+          setUserId(patientData.id);
+          return;
+        }
+
+        // If not found and still have retries, wait before retrying
+        if (attempt < retries - 1) {
+          console.log(`User profile not found, retrying... (attempt ${attempt + 1}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+        }
       }
 
-      if (doctorData && isMountedRef.current) {
-        setUserRole('doctor');
-        setUserId(doctorData.id);
-        return;
-      }
-
-      // Check patients table
-      const { data: patientData, error: patientError } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('id', authUserId)
-        .maybeSingle();
-
-      if (patientError && patientError.code !== 'PGRST116') {
-        throw patientError;
-      }
-
-      if (patientData && isMountedRef.current) {
-        setUserRole('patient');
-        setUserId(patientData.id);
-        return;
-      }
-
-      // User exists in auth but not in application tables
+      // After all retries, mark error
       console.warn(
         'User authenticated but not found in doctors or patients tables:',
         authUserId
@@ -159,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isMountedRef.current) {
         setUserRole(null);
         setUserId(null);
-        setError(new Error('User profile not found. Please contact support.'));
+        setError(new Error('Perfil de usuario no encontrado. Por favor contacta soporte.'));
       }
     } catch (err) {
       console.error('Error loading user role:', err);
@@ -181,13 +190,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        // Check for specific error types
+        if (error.message.includes('Email not confirmed')) {
+          return {
+            error: new Error(
+              'Tu email aún no ha sido confirmado. Por favor revisa tu correo y confirma tu dirección de email.'
+            ),
+          };
+        }
         return { error };
+      }
+
+      // Verify email is confirmed
+      if (data.user && !data.user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        return {
+          error: new Error(
+            'Tu email aún no ha sido confirmado. Por favor revisa tu correo y confirma tu dirección de email.'
+          ),
+        };
       }
 
       return { error: null };
@@ -201,14 +228,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     role: 'doctor' | 'patient',
     additionalData: SignUpData
-  ): Promise<{ error: Error | null }> {
+  ): Promise<{ error: Error | null; needsConfirmation?: boolean }> {
     try {
       setError(null);
 
       // Validate required data
       if (!additionalData.name || additionalData.name.trim() === '') {
-        return { error: new Error('Name is required') };
+        return { error: new Error('El nombre es requerido') };
       }
+
+      // Configure email redirect URL for confirmation
+      const redirectUrl = `${window.location.origin}/auth/callback`;
 
       // Create user in Supabase Auth
       const { data, error: authError } = await supabase.auth.signUp({
@@ -219,6 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role,
             name: additionalData.name,
           },
+          emailRedirectTo: redirectUrl,
         },
       });
 
@@ -227,8 +258,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!data.user) {
-        return { error: new Error('Failed to create user') };
+        return { error: new Error('No se pudo crear el usuario') };
       }
+
+      // Check if email confirmation is needed
+      const needsEmailConfirmation = !data.user.email_confirmed_at;
 
       // Insert into corresponding table
       const table = role === 'doctor' ? 'doctors' : 'patients';
@@ -239,19 +273,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (insertError) {
-        console.error('Failed to create user profile, attempting cleanup...');
+        console.error('Failed to create user profile:', insertError);
 
         // Try to sign out to prevent orphaned state
         await supabase.auth.signOut();
 
         return {
           error: new Error(
-            'Failed to create user profile. Please try again or contact support.'
+            'No se pudo crear el perfil de usuario. Por favor intenta nuevamente o contacta soporte.'
           ),
         };
       }
 
-      return { error: null };
+      return { error: null, needsConfirmation: needsEmailConfirmation };
     } catch (err) {
       return { error: err as Error };
     }

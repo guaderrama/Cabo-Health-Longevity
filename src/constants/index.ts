@@ -101,7 +101,7 @@ export const SUCCESS_MESSAGES = {
 
 // Validación de contraseñas
 export const PASSWORD_RULES = {
-  MIN_LENGTH: 12,
+  MIN_LENGTH: 8,
   REQUIRE_UPPERCASE: true,
   REQUIRE_LOWERCASE: true,
   REQUIRE_NUMBER: true,

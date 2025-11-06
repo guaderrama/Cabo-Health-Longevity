@@ -39,7 +39,22 @@ export default function LoginPage() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError('Credenciales incorrectas. Por favor intente nuevamente.');
+      // Provide specific error messages
+      let errorMessage = 'Credenciales incorrectas. Por favor intente nuevamente.';
+
+      if (error.message.includes('email') && error.message.includes('confirmado')) {
+        errorMessage = error.message; // Use the specific message from AuthContext
+      } else if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Email o contraseña incorrectos. Por favor verifica tus credenciales.';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'Tu email no ha sido confirmado. Por favor revisa tu correo.';
+      } else if (error.message.includes('too many requests') || error.message.includes('rate limit')) {
+        errorMessage = 'Demasiados intentos de inicio de sesión. Por favor espera unos minutos e intenta nuevamente.';
+      } else if (error.message.includes('User not found')) {
+        errorMessage = 'No existe una cuenta con este correo electrónico.';
+      }
+
+      setError(errorMessage);
       setLoading(false);
     } else {
       navigate('/dashboard');

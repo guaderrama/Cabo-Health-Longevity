@@ -74,12 +74,25 @@ export default function RegisterPage() {
       ? { name, specialty, license_number: licenseNumber }
       : { name, birth_date: birthDate, gender };
 
-    const { error } = await signUp(email, password, role, additionalData);
+    const { error, needsConfirmation } = await signUp(email, password, role, additionalData);
 
     if (error) {
       setError(error.message || 'Error al crear cuenta. Por favor intente nuevamente.');
       setLoading(false);
+    } else if (needsConfirmation) {
+      // User needs to confirm email
+      setError('');
+      setLoading(false);
+      // Show success message and redirect to login
+      alert(
+        `✅ ¡Cuenta creada exitosamente!\n\n` +
+        `📧 Hemos enviado un correo de confirmación a:\n${email}\n\n` +
+        `Por favor revisa tu bandeja de entrada y haz clic en el enlace de confirmación antes de iniciar sesión.\n\n` +
+        `💡 Nota: Revisa también tu carpeta de spam si no ves el correo.`
+      );
+      navigate('/login');
     } else {
+      // Email confirmation disabled, user can login immediately
       navigate('/dashboard');
     }
   }

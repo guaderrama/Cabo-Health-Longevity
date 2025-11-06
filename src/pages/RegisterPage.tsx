@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Activity, UserCircle, Stethoscope, Check, X } from 'lucide-react';
 import { validatePassword, validateEmail, type PasswordValidationResult } from '@/lib/validation';
 import { PASSWORD_RULES } from '@/constants';
+import { toast } from 'sonner';
 
 export default function RegisterPage() {
   const [role, setRole] = useState<'doctor' | 'patient'>('patient');
@@ -25,6 +26,12 @@ export default function RegisterPage() {
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  // Memoize regex para mejor performance (evita recrear en cada render)
+  const specialCharsRegex = useMemo(
+    () => new RegExp(`[${PASSWORD_RULES.SPECIAL_CHARS.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`),
+    []
+  );
 
   function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
     const newPassword = e.target.value;
@@ -83,16 +90,18 @@ export default function RegisterPage() {
       // User needs to confirm email
       setError('');
       setLoading(false);
-      // Show success message and redirect to login
-      alert(
-        `✅ ¡Cuenta creada exitosamente!\n\n` +
-        `📧 Hemos enviado un correo de confirmación a:\n${email}\n\n` +
-        `Por favor revisa tu bandeja de entrada y haz clic en el enlace de confirmación antes de iniciar sesión.\n\n` +
-        `💡 Nota: Revisa también tu carpeta de spam si no ves el correo.`
-      );
+      // Show success toast and redirect to login
+      toast.success('¡Cuenta creada exitosamente!', {
+        description: `Hemos enviado un correo de confirmación a: ${email}. Por favor revisa tu bandeja de entrada y haz clic en el enlace de confirmación antes de iniciar sesión. Revisa también tu carpeta de spam si no lo ves.`,
+        duration: 8000,
+      });
       navigate('/login');
     } else {
       // Email confirmation disabled, user can login immediately
+      toast.success('¡Cuenta creada exitosamente!', {
+        description: 'Redirigiendo al dashboard...',
+        duration: 3000,
+      });
       navigate('/dashboard');
     }
   }
@@ -274,9 +283,9 @@ export default function RegisterPage() {
                     <span>Un número</span>
                   </div>
                   <div className={`flex items-center gap-2 ${
-                    new RegExp(`[${PASSWORD_RULES.SPECIAL_CHARS.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`).test(password) ? 'text-green-600' : 'text-gray-600'
+                    specialCharsRegex.test(password) ? 'text-green-600' : 'text-gray-600'
                   }`}>
-                    {new RegExp(`[${PASSWORD_RULES.SPECIAL_CHARS.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`).test(password) ? (
+                    {specialCharsRegex.test(password) ? (
                       <Check className="w-4 h-4" />
                     ) : (
                       <X className="w-4 h-4" />

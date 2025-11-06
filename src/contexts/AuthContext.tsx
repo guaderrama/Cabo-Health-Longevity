@@ -132,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (doctorData && isMountedRef.current) {
           setUserRole('doctor');
           setUserId(doctorData.id);
+          loadingRoleRef.current = false; // Reset before early return
           return;
         }
 
@@ -149,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (patientData && isMountedRef.current) {
           setUserRole('patient');
           setUserId(patientData.id);
+          loadingRoleRef.current = false; // Reset before early return
           return;
         }
 
@@ -259,8 +261,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: new Error('Failed to create user') };
       }
 
-      // Check if email confirmation is required
-      const needsEmailConfirmation = !data.user.email_confirmed_at;
+      // Check if email confirmation is required (explicitly check for null/undefined)
+      const needsEmailConfirmation =
+        data.user.email_confirmed_at === null ||
+        data.user.email_confirmed_at === undefined;
 
       // Insert into corresponding table
       const table = role === 'doctor' ? 'doctors' : 'patients';

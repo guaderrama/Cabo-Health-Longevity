@@ -40,11 +40,13 @@ export function useAnalyses({
         const from = page * pageSize;
         const to = from + pageSize - 1;
 
+        // ✅ CRITICAL FIX: Use LEFT JOIN (remove !inner) to include analyses without reports
+        // This ensures pending analyses show up for doctors to review
         let query = supabase
           .from('analyses')
           .select(`
             *,
-            reports!inner(
+            reports(
               id,
               ai_analysis,
               doctor_notes,
@@ -54,7 +56,7 @@ export function useAnalyses({
               model_used,
               report_pdf_url
             ),
-            patients!inner(
+            patients(
               id,
               name,
               email,
@@ -124,6 +126,7 @@ export function useAnalyses({
       const from = page * pageSize;
       const to = from + pageSize - 1;
 
+      // ✅ Use LEFT JOIN to include all analyses
       let query = supabase
         .from('analyses')
         .select(`
@@ -141,7 +144,10 @@ export function useAnalyses({
           patients(
             id,
             name,
-            email
+            email,
+            phone,
+            birth_date,
+            gender
           )
         `, { count: 'exact' })
         .range(from, to)

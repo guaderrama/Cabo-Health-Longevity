@@ -42,8 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Prevent race conditions and multiple simultaneous role loads
+  // ✅ IMPROVED: Prevent race conditions with cached promise
   const loadingRoleRef = useRef(false);
+  const loadRolePromiseRef = useRef<Promise<void> | null>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -106,13 +107,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function loadUserRole(authUserId: string, retries = 3): Promise<void> {
-    // Prevent multiple simultaneous loads
-    if (loadingRoleRef.current) {
-      console.log('Role load already in progress, skipping...');
-      return;
+    // ✅ IMPROVED: If there's already a role load in progress, return that promise
+    // This ensures only one load happens at a time and callers wait for the same result
+    if (loadRolePromiseRef.current) {
+      console.log('Role load already in progress, waiting for existing promise...');
+      return loadRolePromiseRef.current;
     }
 
-    loadingRoleRef.current = true;
+    // Create a new promise for this load operation
+    loadRolePromiseRef.current = (async () => {
+      loadingRoleRef.current = true;
 
     try {
       // Retry logic to handle race conditions
@@ -170,17 +174,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserId(null);
         setError(new Error('Perfil de usuario no encontrado. Por favor contacta soporte.'));
       }
-    } catch (err) {
-      console.error('Error loading user role:', err);
+      } catch (err) {
+        console.error('Error loading user role:', err);
 
-      if (isMountedRef.current) {
-        setUserRole(null);
-        setUserId(null);
-        setError(err as Error);
+        if (isMountedRef.current) {
+          setUserRole(null);
+          setUserId(null);
+          setError(err as Error);
+        }
+      } finally {
+        loadingRoleRef.current = false;
+        // Clean up the cached promise
+        loadRolePromiseRef.current = null;
       }
-    } finally {
-      loadingRoleRef.current = false;
-    }
+    })();
+
+    // Return the promise so callers can await it
+    return loadRolePromiseRef.current;
   }
 
   async function signIn(

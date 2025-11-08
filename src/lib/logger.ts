@@ -14,6 +14,29 @@ interface LogContext {
 
 class Logger {
   private context: LogContext = {};
+  private localStorageAvailable: boolean | null = null;
+
+  /**
+   * ✅ CRITICAL FIX: Check if localStorage is available
+   * Prevents crashes in private/incognito mode
+   */
+  private isLocalStorageAvailable(): boolean {
+    // Cache the result to avoid repeated checks
+    if (this.localStorageAvailable !== null) {
+      return this.localStorageAvailable;
+    }
+
+    try {
+      const test = '__localStorage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      this.localStorageAvailable = true;
+      return true;
+    } catch {
+      this.localStorageAvailable = false;
+      return false;
+    }
+  }
 
   setContext(context: LogContext) {
     this.context = { ...this.context, ...context };
@@ -96,23 +119,31 @@ class Logger {
     // - LogRocket.captureException(error);
     // - await fetch('/api/logs', { method: 'POST', body: JSON.stringify(logData) });
 
+    // ✅ CRITICAL FIX: Check localStorage availability before use
+    if (!this.isLocalStorageAvailable()) {
+      console.warn('localStorage not available, skipping error log storage');
+      return;
+    }
+
     // Por ahora, solo guardamos en localStorage para debugging
     try {
       const logs = JSON.parse(localStorage.getItem('app_error_logs') || '[]');
       logs.push(logData);
-      // Mantener solo los últimos 50 logs
-      if (logs.length > 50) {
-        logs.shift();
-      }
-      localStorage.setItem('app_error_logs', JSON.stringify(logs));
+
+      // Mantener solo los últimos 50 logs para evitar llenar el storage
+      const trimmedLogs = logs.slice(-50);
+      localStorage.setItem('app_error_logs', JSON.stringify(trimmedLogs));
     } catch (e) {
-      // Silently fail if localStorage is full
+      // Silently fail if localStorage is full or unavailable
+      console.error('Failed to store error logs:', e);
     }
   }
 
   // Método para recuperar logs de errores (útil para debugging)
   getErrorLogs(): unknown[] {
-    if (!isDevelopment) return [];
+    if (!isDevelopment || !this.isLocalStorageAvailable()) {
+      return [];
+    }
 
     try {
       return JSON.parse(localStorage.getItem('app_error_logs') || '[]');
@@ -123,7 +154,15 @@ class Logger {
 
   // Limpiar logs antiguos
   clearErrorLogs() {
-    localStorage.removeItem('app_error_logs');
+    if (!this.isLocalStorageAvailable()) {
+      return;
+    }
+
+    try {
+      localStorage.removeItem('app_error_logs');
+    } catch (e) {
+      console.error('Failed to clear error logs:', e);
+    }
   }
 }
 

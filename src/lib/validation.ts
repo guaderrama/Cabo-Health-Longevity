@@ -98,11 +98,68 @@ export function validatePassword(password: string): PasswordValidationResult {
 }
 
 /**
- * Valida un email según formato estándar
+ * Valida un email según formato estándar (RFC 5322 simplificado)
+ * ✅ IMPROVED: More robust email validation
+ *
+ * Prevents common issues:
+ * - Double dots (user..name@domain.com)
+ * - Leading/trailing dots in local part
+ * - Invalid domain names
  */
 export function validateEmail(email: string): boolean {
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email);
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+
+  // Trim whitespace
+  email = email.trim();
+
+  // Length validation (RFC 5321)
+  if (email.length > 254) {
+    return false;
+  }
+
+  // Basic structure validation
+  if (!email.includes('@') || email.split('@').length !== 2) {
+    return false;
+  }
+
+  const [local, domain] = email.split('@');
+
+  // Local part validation
+  if (!local || local.length === 0 || local.length > 64) {
+    return false;
+  }
+
+  // Domain validation
+  if (!domain || domain.length === 0 || domain.length > 255) {
+    return false;
+  }
+
+  // Regex validation (more robust)
+  // Ensures no consecutive dots, proper formatting, etc.
+  const emailRegex = /^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+
+  if (!emailRegex.test(email)) {
+    return false;
+  }
+
+  // No consecutive dots in domain
+  if (domain.includes('..')) {
+    return false;
+  }
+
+  // No consecutive dots in local
+  if (local.includes('..')) {
+    return false;
+  }
+
+  // Domain must have at least one dot and valid TLD
+  if (!domain.includes('.') || domain.endsWith('.')) {
+    return false;
+  }
+
+  return true;
 }
 
 /**

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "validate:env": "node scripts/validate-env.js",
+    "prebuild": "node scripts/validate-env.js",
     "build": "pnpm install --prefer-offline && rm -rf node_modules/.vite-temp && tsc -b && vite build",
     "build:vercel": "rm -rf src/__tests__ tests && vite build && cp public/_redirects dist/ 2>/dev/null || true",
     "build:prod": "rm -rf node_modules/.vite-temp && tsc -b && BUILD_MODE=prod vite build",

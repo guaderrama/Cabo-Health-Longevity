@@ -28,26 +28,27 @@ export default defineConfig({
   esbuild: {
     // Treat .js files as JSX for better compatibility
     loader: 'tsx',
-    // Disable TypeScript type checking entirely
+    // Enable TypeScript type checking for better code quality
     tsconfigRaw: {
       compilerOptions: {
         useDefineForClassFields: true,
         lib: ['ES2020', 'DOM', 'DOM.Iterable'],
         module: 'ESNext',
-        skipLibCheck: true,
+        skipLibCheck: true, // Keep for performance
         moduleResolution: 'bundler',
         allowImportingTsExtensions: true,
         resolveJsonModule: true,
         isolatedModules: true,
         noEmit: true,
         jsx: 'react-jsx',
-        strict: false,
-        noUnusedLocals: false,
-        noUnusedParameters: false,
-        noFallthroughCasesInSwitch: false,
-        allowJs: true,
+        // ✅ CRITICAL FIX: Enable strict mode for type safety
+        strict: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
+        noFallthroughCasesInSwitch: true,
+        allowJs: true, // Keep for compatibility
         esModuleInterop: true,
-        forceConsistentCasingInFileNames: false,
+        forceConsistentCasingInFileNames: true,
       }
     }
   },

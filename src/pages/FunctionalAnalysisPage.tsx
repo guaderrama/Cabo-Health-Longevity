@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Analysis, Report, Patient, Biomarker } from '@/types';
+import { Analysis, Report, Patient } from '@/types';
 import { ArrowLeft, Activity, FileText, Download } from 'lucide-react';
-import BiomarkerCard from '@/components/biomarkers/BiomarkerCard';
+import BiomarkerCard, { BiomarkerClassification } from '@/components/biomarkers/BiomarkerCard';
 import BiomarkerSummary from '@/components/biomarkers/BiomarkerSummary';
 
 export default function FunctionalAnalysisPage() {
@@ -13,7 +13,7 @@ export default function FunctionalAnalysisPage() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [biomarkers, setBiomarkers] = useState<Biomarker[]>([]);
+  const [biomarkers, setBiomarkers] = useState<BiomarkerClassification[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {

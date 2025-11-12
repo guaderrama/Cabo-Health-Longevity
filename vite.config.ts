@@ -19,7 +19,7 @@ export default defineConfig({
     target: 'esnext',
     minify: 'esbuild',
     rollupOptions: {
-      onwarn(warning, warn) {
+      onwarn() {
         // Ignore all warnings
         return
       }
@@ -31,23 +31,15 @@ export default defineConfig({
     // Disable TypeScript type checking entirely
     tsconfigRaw: {
       compilerOptions: {
-        useDefineForClassFields: true,
-        lib: ['ES2020', 'DOM', 'DOM.Iterable'],
-        module: 'ESNext',
-        skipLibCheck: true,
-        moduleResolution: 'bundler',
-        allowImportingTsExtensions: true,
-        resolveJsonModule: true,
-        isolatedModules: true,
-        noEmit: true,
         jsx: 'react-jsx',
+        useDefineForClassFields: true,
+        skipLibCheck: true,
         strict: false,
         noUnusedLocals: false,
         noUnusedParameters: false,
         noFallthroughCasesInSwitch: false,
         allowJs: true,
         esModuleInterop: true,
-        forceConsistentCasingInFileNames: false,
       }
     }
   },

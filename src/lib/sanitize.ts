@@ -57,7 +57,7 @@ export function sanitizeBasic(dirty: string): string {
   }
 
   try {
-    const clean = DOMPurify.sanitize(dirty, MEDICAL_CONFIG);
+    const clean = String(DOMPurify.sanitize(dirty, MEDICAL_CONFIG));
 
     // Log si se removió contenido peligroso
     if (clean !== dirty) {
@@ -85,7 +85,7 @@ export function sanitizeRichContent(dirty: string): string {
   }
 
   try {
-    const clean = DOMPurify.sanitize(dirty, RICH_CONTENT_CONFIG);
+    const clean = String(DOMPurify.sanitize(dirty, RICH_CONTENT_CONFIG));
 
     // Log si se removió contenido peligroso
     if (clean !== dirty) {
@@ -136,11 +136,11 @@ export function sanitizeText(dirty: string): string {
 
   try {
     // Usar DOMPurify para remover todo HTML
-    const clean = DOMPurify.sanitize(dirty, {
+    const clean = String(DOMPurify.sanitize(dirty, {
       ALLOWED_TAGS: [],
       ALLOWED_ATTR: [],
       KEEP_CONTENT: true
-    });
+    }));
 
     return clean;
   } catch (error) {

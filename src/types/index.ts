@@ -1,11 +1,18 @@
-// Re-export existing types from supabase
-export type {
-  Doctor,
-  Patient,
-  Analysis,
-  Report,
-  Notification,
-} from '@/lib/supabase';
+// Import types from supabase
+import type {
+  Doctor as SupabaseDoctor,
+  Patient as SupabasePatient,
+  Analysis as SupabaseAnalysis,
+  Report as SupabaseReport,
+  Notification as SupabaseNotification,
+} from '../lib/supabase';
+
+// Re-export for convenience
+export type Doctor = SupabaseDoctor;
+export type Patient = SupabasePatient;
+export type Analysis = SupabaseAnalysis;
+export type Report = SupabaseReport;
+export type Notification = SupabaseNotification;
 
 // Error types
 export interface AppError {

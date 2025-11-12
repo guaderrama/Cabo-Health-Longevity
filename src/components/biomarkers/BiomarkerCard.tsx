@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle, AlertCircle, XCircle } from 'lucide-react';
 
-interface BiomarkerClassification {
+export interface BiomarkerClassification {
   biomarker: string;
   value: number;
   units: string;
@@ -16,6 +16,7 @@ interface BiomarkerClassification {
   };
   interpretation?: string;
   description?: string;
+  category?: string;
 }
 
 interface BiomarkerCardProps {

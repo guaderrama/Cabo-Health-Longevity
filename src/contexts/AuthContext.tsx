@@ -274,13 +274,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (insertError) {
         console.error('Failed to create user profile:', insertError);
+        console.error('Full error details:', JSON.stringify(insertError, null, 2));
+        console.error('Table:', table);
+        console.error('Data attempted:', { id: data.user.id, email, ...additionalData });
 
         // Try to sign out to prevent orphaned state
         await supabase.auth.signOut();
 
         return {
           error: new Error(
-            'No se pudo crear el perfil de usuario. Por favor intenta nuevamente o contacta soporte.'
+            `No se pudo crear el perfil de usuario: ${insertError.message}. Por favor intenta nuevamente o contacta soporte.`
           ),
         };
       }

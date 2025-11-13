@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const [licenseNumber, setLicenseNumber] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('');
+  const [phone, setPhone] = useState('');
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -73,7 +74,7 @@ export default function RegisterPage() {
 
     const additionalData = role === 'doctor'
       ? { name, specialty, license_number: licenseNumber }
-      : { name, birth_date: birthDate, gender };
+      : { name, phone, birth_date: birthDate, gender };
 
     const { error, needsConfirmation } = await signUp(email, password, role, additionalData);
 
@@ -324,6 +325,19 @@ export default function RegisterPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ej: 1234567890"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fecha de Nacimiento

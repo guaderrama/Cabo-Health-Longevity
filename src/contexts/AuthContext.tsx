@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Prevent race conditions and multiple simultaneous role loads
   const loadingRoleRef = useRef(false);
   const isMountedRef = useRef(true);
+  const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -87,12 +88,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Auth state changed:', event);
 
         const currentUser = session?.user || null;
+
+        // Prevent redundant calls when user ID hasn't changed
+        if (currentUser?.id === lastUserIdRef.current && event === 'SIGNED_IN') {
+          console.log('User already authenticated with same ID, skipping role load');
+          return;
+        }
+
         setUser(currentUser);
 
         if (currentUser) {
+          lastUserIdRef.current = currentUser.id;
           await loadUserRole(currentUser.id);
         } else {
           // User signed out
+          lastUserIdRef.current = null;
           setUserRole(null);
           setUserId(null);
         }

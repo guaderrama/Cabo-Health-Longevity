@@ -192,37 +192,58 @@ export default function PatientDashboard() {
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
           <div className="text-center">
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <div className="mb-4">
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <span className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition inline-block">
-                  Seleccionar PDF
-                </span>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            {selectedFile && (
+
+            {!selectedFile ? (
               <div className="mb-4">
-                <p className="text-sm text-gray-600">
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  <span className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition inline-block">
+                    Seleccionar PDF
+                  </span>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        console.log('Archivo seleccionado:', file.name);
+                        setSelectedFile(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+                <p className="text-sm text-gray-500 mt-4">
+                  Formatos aceptados: PDF (máximo 20MB)
+                </p>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-3">
                   Archivo seleccionado: <span className="font-medium">{selectedFile.name}</span>
                 </p>
-                <button
-                  onClick={handleFileUpload}
-                  disabled={uploading}
-                  className="mt-4 bg-success text-white px-6 py-2 rounded-lg hover:bg-success-dark transition disabled:opacity-50"
-                >
-                  {uploading ? 'Subiendo...' : 'Subir Análisis'}
-                </button>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={handleFileUpload}
+                    disabled={uploading}
+                    className="bg-success text-white px-6 py-3 rounded-lg hover:bg-success-dark transition disabled:opacity-50 font-medium"
+                  >
+                    {uploading ? 'Subiendo...' : 'Subir Análisis'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedFile(null);
+                      const input = document.getElementById('file-upload') as HTMLInputElement;
+                      if (input) input.value = '';
+                    }}
+                    disabled={uploading}
+                    className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 font-medium"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             )}
-            <p className="text-sm text-gray-500">
-              Formatos aceptados: PDF (máximo 20MB)
-            </p>
           </div>
         </div>
       </div>

@@ -1,0 +1,262 @@
+{
+  "config": {
+    "configFile": "c:\\Users\\admin\\Dropbox\\Ai\\cabo health clinic\\cabo health clinic\\playwright.config.ts",
+    "rootDir": "c:/Users/admin/Dropbox/Ai/cabo health clinic/cabo health clinic/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "c:/Users/admin/Dropbox/Ai/cabo health clinic/cabo health clinic/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "c:/Users/admin/Dropbox/Ai/cabo health clinic/cabo health clinic/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "auth-debug.spec.ts",
+      "file": "auth-debug.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Authentication Debug",
+          "file": "auth-debug.spec.ts",
+          "line": 14,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Full registration and login flow with detailed logging",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 13304,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "\n=== STEP 1: Navigate to Register ===\n"
+                        },
+                        {
+                          "text": "✓ Register page loaded\n"
+                        },
+                        {
+                          "text": "\n=== STEP 2: Fill Registration Form ===\n"
+                        },
+                        {
+                          "text": "✓ Selected patient role\n"
+                        },
+                        {
+                          "text": "✓ Filled name\n"
+                        },
+                        {
+                          "text": "✓ Filled email: debug.test@example.com\n"
+                        },
+                        {
+                          "text": "✓ Filled password\n"
+                        },
+                        {
+                          "text": "Password strength indicator: Muy Fuerte ✓\n"
+                        },
+                        {
+                          "text": "✓ Filled optional fields\n"
+                        },
+                        {
+                          "text": "\n=== STEP 3: Submit Registration ===\n"
+                        },
+                        {
+                          "text": "✓ Clicked submit button\n"
+                        },
+                        {
+                          "text": "[BROWSER ERROR]: Failed to load resource: the server responded with a status of 400 ()\n"
+                        },
+                        {
+                          "text": "❌ Errors found: [ \u001b[32m'Email address \"debug.test@example.com\" is invalid'\u001b[39m ]\n"
+                        },
+                        {
+                          "text": "Current URL: https://cabo-health-longevity.vercel.app/register\n"
+                        },
+                        {
+                          "text": "\n=== STEP 4: Attempt Login ===\n"
+                        },
+                        {
+                          "text": "✓ Login page loaded\n"
+                        },
+                        {
+                          "text": "✓ Filled login credentials\n"
+                        },
+                        {
+                          "text": "✓ Clicked login button\n"
+                        },
+                        {
+                          "text": "[BROWSER ERROR]: Failed to load resource: the server responded with a status of 400 ()\n"
+                        },
+                        {
+                          "text": "❌ Login errors found: [ \u001b[32m'Credenciales incorrectas. Por favor intente nuevamente.'\u001b[39m ]\n"
+                        },
+                        {
+                          "text": "Final URL: https://cabo-health-longevity.vercel.app/login\n"
+                        },
+                        {
+                          "text": "❌ FAILED: Still on login page\n"
+                        },
+                        {
+                          "text": "❌ Error: \"Credenciales incorrectas\" shown\n"
+                        },
+                        {
+                          "text": "This suggests:\n"
+                        },
+                        {
+                          "text": "1. Email confirmation might be required\n"
+                        },
+                        {
+                          "text": "2. Account creation may have failed\n"
+                        },
+                        {
+                          "text": "3. Password may not have been saved correctly\n"
+                        },
+                        {
+                          "text": "\n=== STEP 5: Final Analysis ===\n"
+                        },
+                        {
+                          "text": "Check the screenshots in test-results/ directory\n"
+                        },
+                        {
+                          "text": "Look for any network errors in browser console above\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-05T22:44:41.230Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f65cf927a4ec83fa9793-3e4b386662196ea7fee9",
+              "file": "auth-debug.spec.ts",
+              "line": 15,
+              "column": 3
+            },
+            {
+              "title": "Check if email confirmation is required",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5561,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "\n=== Checking Supabase Email Confirmation Settings ===\n"
+                        },
+                        {
+                          "text": "❌ No email confirmation message found\n"
+                        },
+                        {
+                          "text": "Either confirmation is not required, or message is different\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-05T22:44:57.031Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f65cf927a4ec83fa9793-4fae3e4d3256076af4f7",
+              "file": "auth-debug.spec.ts",
+              "line": 150,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-05T22:44:36.480Z",
+    "duration": 26760.807,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

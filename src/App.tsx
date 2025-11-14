@@ -46,6 +46,27 @@ function DashboardRouter() {
   return <Navigate to="/login" replace />;
 }
 
+// Component to handle root redirect - waits for auth to load
+function RootRedirect() {
+  const { user, loading } = useAuth();
+
+  // Show spinner while auth is loading
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  // Redirect based on auth state
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -114,8 +135,8 @@ function App() {
             }
           />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

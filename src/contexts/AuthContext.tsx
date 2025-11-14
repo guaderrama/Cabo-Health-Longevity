@@ -45,6 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Prevent race conditions and multiple simultaneous role loads
   const loadingRoleRef = useRef(false);
   const isMountedRef = useRef(true);
+  const authInitializedRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -63,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user && isMountedRef.current) {
           setUser(session.user);
+          lastUserIdRef.current = session.user.id;
           await loadUserRole(session.user.id);
         }
       } catch (err) {
@@ -73,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (isMountedRef.current) {
           setLoading(false);
+          authInitializedRef.current = true;
         }
       }
     }
@@ -86,7 +90,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log('Auth state changed:', event);
 
+        // CRITICAL FIX: Filter events to prevent infinite loops
+        // Only process these specific events:
+        const validEvents = ['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'];
+        if (!validEvents.includes(event)) {
+          console.log(`Ignoring auth event: ${event}`);
+          return;
+        }
+
+        // CRITICAL FIX: Skip INITIAL_SESSION if we already initialized
+        // This prevents processing the session twice on page load
+        if (event === 'INITIAL_SESSION' && authInitializedRef.current) {
+          console.log('Skipping duplicate INITIAL_SESSION');
+          return;
+        }
+
         const currentUser = session?.user || null;
+        const currentUserId = currentUser?.id || null;
+
+        // CRITICAL FIX: Only update if user actually changed
+        // This prevents unnecessary re-renders and loops
+        if (currentUserId === lastUserIdRef.current) {
+          console.log('User ID unchanged, skipping update');
+          return;
+        }
+
+        lastUserIdRef.current = currentUserId;
         setUser(currentUser);
 
         if (currentUser) {
@@ -95,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // User signed out
           setUserRole(null);
           setUserId(null);
+          lastUserIdRef.current = null;
         }
       }
     );
@@ -112,7 +142,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // CRITICAL FIX: Set loading to true when starting role load
+    // This ensures UI shows loading state during role fetch
+    if (!authInitializedRef.current) {
+      setLoading(true);
+    }
+
     loadingRoleRef.current = true;
+
+    // CRITICAL FIX: Set timeout to force loading=false after 10 seconds
+    // This prevents infinite loading if something goes wrong
+    const timeoutId = setTimeout(() => {
+      if (isMountedRef.current && !authInitializedRef.current) {
+        console.error('Role load timeout after 10 seconds');
+        setLoading(false);
+        loadingRoleRef.current = false;
+      }
+    }, 10000);
 
     try {
       // Retry logic to handle race conditions
@@ -179,7 +225,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(err as Error);
       }
     } finally {
+      // CRITICAL FIX: Always clear timeout and reset loading
+      clearTimeout(timeoutId);
       loadingRoleRef.current = false;
+
+      // CRITICAL FIX: Ensure loading is set to false when done
+      if (isMountedRef.current && !authInitializedRef.current) {
+        setLoading(false);
+      }
     }
   }
 

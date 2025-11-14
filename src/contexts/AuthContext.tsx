@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadingRoleRef = useRef(false);
   const isMountedRef = useRef(true);
   const lastUserIdRef = useRef<string | null>(null);
+  const authInitializedRef = useRef(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -64,8 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user && isMountedRef.current) {
           setUser(session.user);
+          lastUserIdRef.current = session.user.id;
           await loadUserRole(session.user.id);
         }
+
+        authInitializedRef.current = true;
       } catch (err) {
         console.error('Auth initialization error:', err);
         if (isMountedRef.current) {
@@ -88,14 +92,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Auth state changed:', event);
 
         const currentUser = session?.user || null;
+        const currentUserId = currentUser?.id || null;
 
-        // Prevent redundant calls when user ID hasn't changed
-        if (currentUser?.id === lastUserIdRef.current && event === 'SIGNED_IN') {
-          console.log('User already authenticated with same ID, skipping role load');
+        // CRITICAL FIX: Only process specific events to prevent infinite loops
+        // Ignore TOKEN_REFRESHED, USER_UPDATED, and other passive events
+        const relevantEvents = ['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT'];
+        if (!relevantEvents.includes(event)) {
+          console.log(`Ignoring auth event: ${event}`);
           return;
         }
 
-        setUser(currentUser);
+        // CRITICAL FIX: Skip INITIAL_SESSION if auth already initialized
+        if (event === 'INITIAL_SESSION' && authInitializedRef.current) {
+          console.log('Initial session already processed, skipping');
+          return;
+        }
+
+        // CRITICAL FIX: Prevent redundant processing when user hasn't changed
+        if (currentUserId === lastUserIdRef.current && currentUserId !== null) {
+          console.log('User ID unchanged, skipping role load');
+          return;
+        }
+
+        // CRITICAL FIX: Only update state if user actually changed
+        if (currentUserId !== lastUserIdRef.current) {
+          setUser(currentUser);
+        }
 
         if (currentUser) {
           lastUserIdRef.current = currentUser.id;
@@ -116,9 +138,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function loadUserRole(authUserId: string, retries = 3): Promise<void> {
-    // Prevent multiple simultaneous loads
+    // CRITICAL FIX: Prevent multiple simultaneous loads
     if (loadingRoleRef.current) {
       console.log('Role load already in progress, skipping...');
+      return;
+    }
+
+    // CRITICAL FIX: Don't reload if we already have the role for this user
+    if (authUserId === lastUserIdRef.current && userRole !== null) {
+      console.log('User role already loaded for this user ID, skipping...');
       return;
     }
 
@@ -142,6 +170,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (doctorData && isMountedRef.current) {
           setUserRole('doctor');
           setUserId(doctorData.id);
+          // CRITICAL FIX: Ensure loading is false after successful role load
+          if (loading) {
+            setLoading(false);
+          }
           return;
         }
 
@@ -159,6 +191,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (patientData && isMountedRef.current) {
           setUserRole('patient');
           setUserId(patientData.id);
+          // CRITICAL FIX: Ensure loading is false after successful role load
+          if (loading) {
+            setLoading(false);
+          }
           return;
         }
 
@@ -179,6 +215,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserRole(null);
         setUserId(null);
         setError(new Error('Perfil de usuario no encontrado. Por favor contacta soporte.'));
+        // CRITICAL FIX: Set loading to false even on error
+        setLoading(false);
       }
     } catch (err) {
       console.error('Error loading user role:', err);
@@ -187,6 +225,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserRole(null);
         setUserId(null);
         setError(err as Error);
+        // CRITICAL FIX: Set loading to false even on error
+        setLoading(false);
       }
     } finally {
       loadingRoleRef.current = false;

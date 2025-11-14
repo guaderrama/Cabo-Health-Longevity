@@ -42,27 +42,7 @@ export function useAnalyses({
 
         let query = supabase
           .from('analyses')
-          .select(`
-            *,
-            reports!inner(
-              id,
-              ai_analysis,
-              doctor_notes,
-              recommendations,
-              risk_level,
-              approved_by_doctor,
-              model_used,
-              report_pdf_url
-            ),
-            patients!inner(
-              id,
-              name,
-              email,
-              phone,
-              birth_date,
-              gender
-            )
-          `, { count: 'exact' })
+          .select('*', { count: 'exact' })
           .range(from, to)
           .order('uploaded_at', { ascending: false });
 
@@ -84,14 +64,8 @@ export function useAnalyses({
 
         // Solo actualizar si el componente sigue montado
         if (isMountedRef.current) {
-          // Mapear los datos para mantener la estructura esperada
-          const mappedData = (data || []).map(analysis => ({
-            ...analysis,
-            report: analysis.reports?.[0] || null,
-            patient: analysis.patients || null,
-          }));
-
-          setAnalyses(mappedData);
+          // Los datos ya vienen en el formato correcto sin JOIN
+          setAnalyses(data || []);
           setTotalPages(Math.ceil((count || 0) / pageSize));
         }
       } catch (err) {
@@ -126,24 +100,7 @@ export function useAnalyses({
 
       let query = supabase
         .from('analyses')
-        .select(`
-          *,
-          reports(
-            id,
-            ai_analysis,
-            doctor_notes,
-            recommendations,
-            risk_level,
-            approved_by_doctor,
-            model_used,
-            report_pdf_url
-          ),
-          patients(
-            id,
-            name,
-            email
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .range(from, to)
         .order('uploaded_at', { ascending: false });
 
@@ -160,13 +117,8 @@ export function useAnalyses({
       if (refreshError) throw refreshError;
 
       if (isMountedRef.current) {
-        const mappedData = (data || []).map(analysis => ({
-          ...analysis,
-          report: analysis.reports?.[0] || null,
-          patient: analysis.patients || null,
-        }));
-
-        setAnalyses(mappedData);
+        // Los datos ya vienen en el formato correcto sin JOIN
+        setAnalyses(data || []);
         setTotalPages(Math.ceil((count || 0) / pageSize));
       }
     } catch (err) {

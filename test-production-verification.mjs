@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
 
 const supabaseUrl = 'https://holtohiphaokzshtpyku.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvbHRvaGlwaGFva3pzaHRweWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNDEzNDAsImV4cCI6MjA3NzYxNzM0MH0.r9g54Oxb_8uMLa4A33Pm0m76pS2_AoCpl5-MmPS75gk';
@@ -175,6 +176,12 @@ const PROD_URL = 'https://cabo-health-longevity.vercel.app';
     }
 
     console.log('✅ DASHBOARD CARGÓ CORRECTAMENTE\n');
+
+    // Asegurar que todo el dashboard terminó de hidratarse antes de continuar
+    await page.waitForLoadState('networkidle').catch(() => {
+      console.log('⚠️ networkidle no se alcanzó, continuando con el contenido disponible');
+    });
+
     await page.screenshot({ path: 'prod-dashboard-loaded.png' });
     console.log('📸 Screenshot: prod-dashboard-loaded.png\n');
 
@@ -185,15 +192,30 @@ const PROD_URL = 'https://cabo-health-longevity.vercel.app';
     console.log('TEST 4: VERIFICACIÓN DE BOTÓN DE SUBIR PDF');
     console.log('━'.repeat(80));
 
-    await page.waitForTimeout(3000);
+    // Esperar a que el dashboard del paciente esté completamente montado
+    await page.waitForSelector('h1:has-text("Mi Portal de Salud")', {
+      timeout: 60000,
+    }).catch(() => {
+      console.log('⚠️ El título principal no apareció antes del tiempo límite');
+    });
 
-    const selectButton = await page.$('label[for="file-upload"]');
+    const selectButton = await page.waitForSelector('label[for="file-upload"]', {
+      timeout: 60000,
+      state: 'attached',
+    }).catch(() => null);
     if (!selectButton) {
+      const htmlDump = await page.content();
+      fs.writeFileSync('prod-dashboard-dom.html', htmlDump, 'utf8');
+      console.log('📝 Dump HTML: prod-dashboard-dom.html');
       console.log('❌ NO SE ENCONTRÓ EL BOTÓN "Seleccionar PDF"\n');
       await page.screenshot({ path: 'prod-no-select-button.png' });
       await browser.close();
       process.exit(1);
     }
+
+    await selectButton.waitForElementState('visible').catch(() => {
+      console.log('⚠️ El botón existe pero no se volvió visible antes del tiempo límite');
+    });
     console.log('✅ Botón "Seleccionar PDF" encontrado');
 
     // Simular selección de archivo
@@ -212,11 +234,13 @@ const PROD_URL = 'https://cabo-health-longevity.vercel.app';
       buffer: buffer,
     });
 
-    await page.waitForTimeout(2000);
-
     // Verificar que aparecieron los botones
-    const uploadButton = await page.$('button:has-text("Subir Análisis")');
-    const cancelButton = await page.$('button:has-text("Cancelar")');
+    const uploadButton = await page.waitForSelector('button:has-text("Subir Análisis")', {
+      timeout: 10000,
+    }).catch(() => null);
+    const cancelButton = await page.waitForSelector('button:has-text("Cancelar")', {
+      timeout: 10000,
+    }).catch(() => null);
 
     if (!uploadButton) {
       console.log('❌ BOTÓN "Subir Análisis" NO APARECIÓ\n');

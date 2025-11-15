@@ -60,7 +60,8 @@
       "Bash(node test-upload-pdf.mjs:*)",
       "Bash(npx tsc --noEmit)",
       "Bash(node test-final-verification.mjs:*)",
-      "Bash(node test-production-verification.mjs:*)"
+      "Bash(node test-production-verification.mjs:*)",
+      "Bash(node test-dashboard-debug.mjs:*)"
     ],
     "deny": [],
     "ask": []

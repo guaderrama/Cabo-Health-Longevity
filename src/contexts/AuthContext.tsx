@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function loadUserRole(authUserId: string, retries = 3): Promise<void> {
+  async function loadUserRole(authUserId: string, retries = 5): Promise<void> {
     // CRITICAL FIX: Prevent multiple simultaneous loads
     if (loadingRoleRef.current) {
       console.log('Role load already in progress, skipping...');
@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadingRoleRef.current = true;
 
     try {
-      // Retry logic to handle race conditions
+      // Retry logic to handle race conditions and materialization delays
       for (let attempt = 0; attempt < retries; attempt++) {
         // Check doctors table
         const { data: doctorData, error: doctorError } = await supabase
@@ -168,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (doctorData && isMountedRef.current) {
+          console.log('User role found: doctor');
           setUserRole('doctor');
           setUserId(doctorData.id);
           // CRITICAL FIX: Ensure loading is false after successful role load
@@ -189,6 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (patientData && isMountedRef.current) {
+          console.log('User role found: patient');
           setUserRole('patient');
           setUserId(patientData.id);
           // CRITICAL FIX: Ensure loading is false after successful role load
@@ -198,10 +200,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // If not found and still have retries, wait before retrying
+        // If not found and still have retries, wait before retrying (longer delay for new registrations)
         if (attempt < retries - 1) {
-          console.log(`User profile not found, retrying... (attempt ${attempt + 1}/${retries})`);
-          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+          const delay = Math.min(2000 * (attempt + 1), 5000); // 2s, 4s, 5s, 5s, 5s
+          console.log(`User profile not materializado yet, waiting ${delay}ms before retry... (attempt ${attempt + 1}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/shared/lib/supabase';
 import { Activity, CheckCircle, XCircle } from 'lucide-react';
 
 export default function AuthCallbackPage() {

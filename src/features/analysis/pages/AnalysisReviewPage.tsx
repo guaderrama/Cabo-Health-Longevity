@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { Analysis, Report, Patient, AppError } from '@/types';
-import { toast } from '@/lib/toast';
+import { supabase } from '@/shared/lib/supabase';
+import { Analysis, Report, Patient, AppError } from '@/shared/types';
+import { toast } from '@/shared/lib/toast';
 import { ArrowLeft, Check, FileText } from 'lucide-react';
 
 export default function AnalysisReviewPage() {

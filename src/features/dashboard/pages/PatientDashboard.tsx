@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { useAnalyses } from '@/hooks/useAnalyses';
-import { toast } from '@/lib/toast';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { supabase } from '@/shared/lib/supabase';
+import { useAnalyses } from '@/features/analysis/hooks/useAnalyses';
+import { toast } from '@/shared/lib/toast';
 import { Upload, FileText, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {

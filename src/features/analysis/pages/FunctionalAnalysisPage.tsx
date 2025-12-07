@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { Analysis, Report, Patient } from '@/types';
+import { supabase } from '@/shared/lib/supabase';
+import { Analysis, Report, Patient } from '@/shared/types';
 import { ArrowLeft, Activity, FileText, Download } from 'lucide-react';
-import BiomarkerCard, { BiomarkerClassification } from '@/components/biomarkers/BiomarkerCard';
-import BiomarkerSummary from '@/components/biomarkers/BiomarkerSummary';
+import BiomarkerCard, { BiomarkerClassification } from '@/features/analysis/components/BiomarkerCard';
+import BiomarkerSummary from '@/features/analysis/components/BiomarkerSummary';
 
 export default function FunctionalAnalysisPage() {
   const { id } = useParams();

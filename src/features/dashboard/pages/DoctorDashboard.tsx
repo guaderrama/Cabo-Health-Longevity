@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useAnalyses } from '@/hooks/useAnalyses';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { useAnalyses } from '@/features/analysis/hooks/useAnalyses';
 import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { sanitizeText } from '@/lib/sanitize';
+import { sanitizeText } from '@/shared/lib/sanitize';
 
 export default function DoctorDashboard() {
   const { userId } = useAuth();

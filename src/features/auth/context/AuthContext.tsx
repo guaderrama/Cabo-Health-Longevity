@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/shared/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -283,17 +283,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     additionalData: SignUpData
   ): Promise<{ error: Error | null; needsConfirmation?: boolean }> {
     try {
+      console.log('[SIGNUP] Starting signup process for:', email, 'role:', role);
       setError(null);
 
       // Validate required data
       if (!additionalData.name || additionalData.name.trim() === '') {
+        console.log('[SIGNUP] Validation failed: name is required');
         return { error: new Error('El nombre es requerido') };
       }
 
       // Configure email redirect URL for confirmation
       const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log('[SIGNUP] Redirect URL:', redirectUrl);
 
       // Create user in Supabase Auth
+      console.log('[SIGNUP] Calling supabase.auth.signUp...');
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -305,31 +309,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailRedirectTo: redirectUrl,
         },
       });
+      console.log('[SIGNUP] Auth signup completed. Error:', authError, 'User:', data?.user?.id);
 
       if (authError) {
+        console.log('[SIGNUP] Auth error, returning early');
         return { error: authError };
       }
 
       if (!data.user) {
+        console.log('[SIGNUP] No user returned, returning early');
         return { error: new Error('No se pudo crear el usuario') };
       }
 
       // Check if email confirmation is needed
       const needsEmailConfirmation = !data.user.email_confirmed_at;
+      console.log('[SIGNUP] Email confirmed:', data.user.email_confirmed_at, 'needsConfirmation:', needsEmailConfirmation);
 
       // Insert into corresponding table
       const table = role === 'doctor' ? 'doctors' : 'patients';
-      const { error: insertError } = await supabase.from(table).insert({
+      const insertData = {
         id: data.user.id,
         email,
         ...additionalData,
-      });
+      };
+      console.log('[SIGNUP] About to INSERT into', table, 'with data:', JSON.stringify(insertData));
+
+      const { error: insertError } = await supabase.from(table).insert(insertData);
+      console.log('[SIGNUP] INSERT completed. Error:', insertError);
 
       if (insertError) {
-        console.error('Failed to create user profile:', insertError);
-        console.error('Full error details:', JSON.stringify(insertError, null, 2));
-        console.error('Table:', table);
-        console.error('Data attempted:', { id: data.user.id, email, ...additionalData });
+        console.error('[SIGNUP] Failed to create user profile:', insertError);
+        console.error('[SIGNUP] Full error details:', JSON.stringify(insertError, null, 2));
+        console.error('[SIGNUP] Table:', table);
+        console.error('[SIGNUP] Data attempted:', insertData);
 
         // Try to sign out to prevent orphaned state
         await supabase.auth.signOut();
@@ -341,8 +353,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      console.log('[SIGNUP] Success! Returning needsConfirmation:', needsEmailConfirmation);
       return { error: null, needsConfirmation: needsEmailConfirmation };
     } catch (err) {
+      console.error('[SIGNUP] Caught exception:', err);
       return { error: err as Error };
     }
   }

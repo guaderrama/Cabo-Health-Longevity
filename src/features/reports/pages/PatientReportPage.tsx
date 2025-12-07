@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase, Analysis, Report } from '@/lib/supabase';
+import { supabase } from '@/shared/lib/supabase';
+import { Analysis, Report } from '@/shared/types';
 import { ArrowLeft, Download, FileText, AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { sanitizeRichContent, useSanitizedHTML } from '@/lib/sanitize';
+import { sanitizeRichContent, useSanitizedHTML } from '@/shared/lib/sanitize';
 
 export default function PatientReportPage() {
   const { id } = useParams();

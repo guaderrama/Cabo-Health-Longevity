@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Activity, UserCircle, Stethoscope, Check, X } from 'lucide-react';
-import { validatePassword, validateEmail, type PasswordValidationResult } from '@/lib/validation';
-import { PASSWORD_RULES } from '@/constants';
+import { validatePassword, validateEmail, type PasswordValidationResult } from '@/shared/lib/validation';
+import { PASSWORD_RULES } from '@/shared/constants';
 
 export default function RegisterPage() {
   const [role, setRole] = useState<'doctor' | 'patient'>('patient');

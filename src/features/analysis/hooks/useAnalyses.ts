@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { AnalysisWithReport } from '@/types';
+import { supabase } from '@/shared/lib/supabase';
+import { AnalysisWithReport } from '@/shared/types';
 
 interface UseAnalysesOptions {
   userId?: string | null;

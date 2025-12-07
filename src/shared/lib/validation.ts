@@ -1,4 +1,4 @@
-import { PASSWORD_RULES } from '@/constants';
+import { PASSWORD_RULES } from '@/shared/constants';
 
 export interface PasswordValidationResult {
   valid: boolean;

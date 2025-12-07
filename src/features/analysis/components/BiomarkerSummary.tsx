@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/shared/lib/supabase';
 import { Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface CategorySummary {

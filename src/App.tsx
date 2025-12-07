@@ -1,16 +1,16 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
-import AuthCallbackPage from '@/pages/AuthCallbackPage';
-import DoctorDashboard from '@/pages/DoctorDashboard';
-import PatientDashboard from '@/pages/PatientDashboard';
-import AnalysisReviewPage from '@/pages/AnalysisReviewPage';
-import PatientReportPage from '@/pages/PatientReportPage';
-import FunctionalAnalysisPage from '@/pages/FunctionalAnalysisPage';
-import DashboardLayout from '@/components/common/DashboardLayout';
+import { AuthProvider, useAuth } from '@/features/auth/context/AuthContext';
+import LoginPage from '@/features/auth/pages/LoginPage';
+import RegisterPage from '@/features/auth/pages/RegisterPage';
+import AuthCallbackPage from '@/features/auth/pages/AuthCallbackPage';
+import DoctorDashboard from '@/features/dashboard/pages/DoctorDashboard';
+import PatientDashboard from '@/features/dashboard/pages/PatientDashboard';
+import AnalysisReviewPage from '@/features/analysis/pages/AnalysisReviewPage';
+import PatientReportPage from '@/features/reports/pages/PatientReportPage';
+import FunctionalAnalysisPage from '@/features/analysis/pages/FunctionalAnalysisPage';
+import DashboardLayout from '@/shared/components/DashboardLayout';
 
 function PrivateRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole?: 'doctor' | 'patient' }) {
   const { user, userRole, loading } = useAuth();

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Activity, X } from 'lucide-react';
-import { validateEmail } from '@/lib/validation';
+import { validateEmail } from '@/shared/lib/validation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');

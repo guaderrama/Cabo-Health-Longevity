@@ -85,8 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
 
     // Subscribe to auth changes
+    // CRITICAL: Handler must NOT be async/await to avoid blocking Supabase client
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!isMountedRef.current) return;
 
         console.log('Auth state changed:', event);
@@ -121,7 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (currentUser) {
           lastUserIdRef.current = currentUser.id;
-          await loadUserRole(currentUser.id);
+          // CRITICAL: Don't await - run in background to avoid blocking auth operations
+          // The await was causing supabase.auth.signUp() to hang indefinitely
+          void loadUserRole(currentUser.id);
         } else {
           // User signed out
           lastUserIdRef.current = null;

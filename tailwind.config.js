@@ -49,6 +49,16 @@ module.exports = {
 					light: '#FEE2E2',
 					dark: '#991B1B',
 				},
+				success: {
+					DEFAULT: '#22C55E',
+					light: '#DCFCE7',
+					dark: '#166534',
+				},
+				warning: {
+					DEFAULT: '#F59E0B',
+					light: '#FEF3C7',
+					dark: '#92400E',
+				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))',

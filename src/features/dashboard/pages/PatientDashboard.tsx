@@ -311,7 +311,7 @@ export default function PatientDashboard() {
                       })}
                     </p>
                   </div>
-                  {analysis.status === 'approved' && analysis.report && (
+                  {analysis.status === 'approved' && (
                     <button
                       onClick={() => window.location.href = `/patient/report/${analysis.id}`}
                       className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"

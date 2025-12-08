@@ -40,9 +40,14 @@ export function useAnalyses({
         const from = page * pageSize;
         const to = from + pageSize - 1;
 
+        // Incluir report para pacientes, patient para doctores
+        const selectQuery = userType === 'patient'
+          ? '*, report:reports(*)'
+          : '*, patient:patients(id, name, email), report:reports(*)';
+
         let query = supabase
           .from('analyses')
-          .select('*', { count: 'exact' })
+          .select(selectQuery, { count: 'exact' })
           .range(from, to)
           .order('uploaded_at', { ascending: false });
 
@@ -98,9 +103,14 @@ export function useAnalyses({
       const from = page * pageSize;
       const to = from + pageSize - 1;
 
+      // Incluir report para pacientes, patient para doctores
+      const selectQuery = userType === 'patient'
+        ? '*, report:reports(*)'
+        : '*, patient:patients(id, name, email), report:reports(*)';
+
       let query = supabase
         .from('analyses')
-        .select('*', { count: 'exact' })
+        .select(selectQuery, { count: 'exact' })
         .range(from, to)
         .order('uploaded_at', { ascending: false });
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { supabase } from '@/shared/lib/supabase';
 import { useAnalyses } from '@/features/analysis/hooks/useAnalyses';
@@ -31,6 +32,7 @@ ChartJS.register(
 
 export default function PatientDashboard() {
   const { userId } = useAuth();
+  const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -313,7 +315,7 @@ export default function PatientDashboard() {
                   </div>
                   {analysis.status === 'approved' && (
                     <button
-                      onClick={() => window.location.href = `/patient/report/${analysis.id}`}
+                      onClick={() => navigate(`/patient/report/${analysis.id}`)}
                       className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
                     >
                       Ver Resultados

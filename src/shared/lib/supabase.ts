@@ -24,7 +24,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    // Persistir sesión en localStorage para que se recuerde entre recargas
+    persistSession: true,
+    // Almacenar en localStorage (default, pero explícito para claridad)
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    // Auto-refrescar el token antes de que expire
+    autoRefreshToken: true,
+    // Detectar sesión en otras pestañas
+    detectSessionInUrl: true,
+    // Mantener el flujo de código PKCE para seguridad
+    flowType: 'pkce',
+  },
+});
 
 // Tipos para las tablas
 export interface Doctor {

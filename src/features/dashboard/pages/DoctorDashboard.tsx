@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useAnalyses } from '@/features/analysis/hooks/useAnalyses';
-import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { supabase } from '@/shared/lib/supabase';
+import { toast } from '@/shared/lib/toast';
+import { FileText, Clock, CheckCircle, AlertCircle, Eye, Download, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { sanitizeText } from '@/shared/lib/sanitize';
 
 export default function DoctorDashboard() {
   const { userId } = useAuth();
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; filename: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
 
   // Usar el hook optimizado que hace una sola query con JOIN
@@ -66,6 +70,40 @@ export default function DoctorDashboard() {
         {badge.text}
       </span>
     );
+  }
+
+  async function handleDeleteAnalysis() {
+    if (!deleteConfirm) return;
+
+    setDeleting(true);
+    try {
+      // Primero eliminar los reports relacionados
+      const { error: reportError } = await supabase
+        .from('reports')
+        .delete()
+        .eq('analysis_id', deleteConfirm.id);
+
+      if (reportError) {
+        console.error('Error eliminando reports:', reportError);
+      }
+
+      // Luego eliminar el análisis
+      const { error: analysisError } = await supabase
+        .from('analyses')
+        .delete()
+        .eq('id', deleteConfirm.id);
+
+      if (analysisError) throw analysisError;
+
+      toast.success('Análisis eliminado', 'El estudio ha sido eliminado correctamente');
+      setDeleteConfirm(null);
+      await refresh();
+    } catch (error) {
+      console.error('Error eliminando análisis:', error);
+      toast.error('Error al eliminar', 'No se pudo eliminar el análisis. Intente nuevamente.');
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -181,6 +219,16 @@ export default function DoctorDashboard() {
                       PDF
                     </a>
                   )}
+                  <button
+                    onClick={() => setDeleteConfirm({
+                      id: analysis.id,
+                      filename: analysis.pdf_filename || 'este análisis'
+                    })}
+                    className="flex items-center gap-2 px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger-dark transition"
+                    title="Eliminar análisis"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
@@ -275,6 +323,55 @@ export default function DoctorDashboard() {
                   <ChevronRight className="h-5 w-5" />
                 </button>
               </nav>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-danger-light flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-danger" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Eliminar Análisis</h3>
+                <p className="text-sm text-gray-500">Esta acción no se puede deshacer</p>
+              </div>
+            </div>
+
+            <p className="text-gray-700 mb-6">
+              ¿Está seguro que desea eliminar <strong>{deleteConfirm.filename}</strong>?
+              El análisis será eliminado permanentemente del sistema y el paciente ya no podrá verlo.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAnalysis}
+                disabled={deleting}
+                className="px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger-dark transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

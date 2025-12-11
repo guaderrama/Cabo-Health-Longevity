@@ -140,16 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function loadUserRole(authUserId: string, retries = 5): Promise<void> {
+  async function loadUserRole(authUserId: string, retries = 3): Promise<void> {
     // CRITICAL FIX: Prevent multiple simultaneous loads
     if (loadingRoleRef.current) {
       console.log('Role load already in progress, skipping...');
-      return;
-    }
-
-    // CRITICAL FIX: Don't reload if we already have the role for this user
-    if (authUserId === lastUserIdRef.current && userRole !== null) {
-      console.log('User role already loaded for this user ID, skipping...');
       return;
     }
 
@@ -203,10 +197,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // If not found and still have retries, wait before retrying (longer delay for new registrations)
+        // If not found and still have retries, wait before retrying
         if (attempt < retries - 1) {
-          const delay = Math.min(2000 * (attempt + 1), 5000); // 2s, 4s, 5s, 5s, 5s
-          console.log(`User profile not materializado yet, waiting ${delay}ms before retry... (attempt ${attempt + 1}/${retries})`);
+          const delay = 1000 * (attempt + 1); // 1s, 2s, 3s
+          console.log(`User profile not found yet, waiting ${delay}ms before retry... (attempt ${attempt + 1}/${retries})`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }

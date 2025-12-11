@@ -3,11 +3,11 @@
  * Crítico para datos médicos que pueden contener HTML embebido
  */
 
-import DOMPurify from 'dompurify';
+import DOMPurify, { Config } from 'dompurify';
 import { logger } from './logger';
 
 // Configuración estricta para contenido médico
-const MEDICAL_CONFIG: DOMPurify.Config = {
+const MEDICAL_CONFIG: Config = {
   // Tags permitidos para formato básico
   ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'span'],
 
@@ -28,7 +28,7 @@ const MEDICAL_CONFIG: DOMPurify.Config = {
 };
 
 // Configuración para contenido rico (reportes médicos con formato)
-const RICH_CONTENT_CONFIG: DOMPurify.Config = {
+const RICH_CONTENT_CONFIG: Config = {
   ALLOWED_TAGS: [
     'b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'span',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',

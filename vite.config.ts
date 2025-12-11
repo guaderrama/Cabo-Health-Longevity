@@ -33,13 +33,6 @@ export default defineConfig({
       compilerOptions: {
         jsx: 'react-jsx',
         useDefineForClassFields: true,
-        skipLibCheck: true,
-        strict: false,
-        noUnusedLocals: false,
-        noUnusedParameters: false,
-        noFallthroughCasesInSwitch: false,
-        allowJs: true,
-        esModuleInterop: true,
       }
     }
   },

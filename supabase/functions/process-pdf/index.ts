@@ -45,10 +45,10 @@ Deno.serve(async (req) => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const storagePath = `${patientId}/${timestamp}_${fileName}`
 
-    // Upload PDF to Supabase Storage
+    // Upload PDF to Supabase Storage (using existing medical-reports bucket)
     const { data: uploadData, error: uploadError } = await supabaseClient
       .storage
-      .from('analysis-pdfs')
+      .from('medical-reports')
       .upload(storagePath, binaryData, {
         contentType: 'application/pdf',
         upsert: false
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     // Get public URL
     const { data: urlData } = supabaseClient
       .storage
-      .from('analysis-pdfs')
+      .from('medical-reports')
       .getPublicUrl(storagePath)
 
     const pdfUrl = urlData.publicUrl

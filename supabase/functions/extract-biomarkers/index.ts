@@ -60,21 +60,11 @@ Para cada biomarcador:
 - category: metabolic/lipid/thyroid/nutritional/hepatic/renal/inflammatory/hematologic
 - status: optimal/acceptable/suboptimal/abnormal
 
-INSTRUCCIONES PARA DESCRIPTION E INTERPRETATION (MUY IMPORTANTE):
+INSTRUCCIONES PARA DESCRIPTION E INTERPRETATION:
 
-Para "description" genera un texto educativo de 2-3 oraciones que explique:
-- Qué mide exactamente este biomarcador
-- Qué órganos o sistemas corporales evalúa
-- Por qué es clínicamente importante
-- Con qué otros biomarcadores se relaciona
+Para "description" genera 1-2 oraciones: qué mide, qué sistemas evalúa, y con qué biomarcadores se relaciona.
 
-Para "interpretation" genera un texto personalizado de 3-4 oraciones que incluya:
-- Evaluación del valor específico del paciente vs rangos óptimos funcionales
-- Posibles causas si está fuera del rango óptimo funcional
-- Recomendaciones prácticas de dieta o estilo de vida
-- Qué síntomas observar o cuándo hacer seguimiento
-
-IMPORTANTE: Las interpretaciones deben ser en segunda persona ("Tu valor...", "Considera...") para mayor conexión con el paciente.
+Para "interpretation" genera 2-3 oraciones en segunda persona ("Tu valor..."): evaluación del valor vs rango óptimo, posibles causas si fuera de rango, y recomendación de dieta/estilo de vida.
 
 Responde SOLO con JSON válido. Formato:
 {
@@ -92,11 +82,11 @@ Responde SOLO con JSON válido. Formato:
       "acceptable_max": 99,
       "conventional_min": 65,
       "conventional_max": 99,
-      "description": "La glucosa en ayunas mide el nivel de azúcar en sangre después de 8-12 horas sin comer. Es el principal indicador del metabolismo de carbohidratos y función pancreática. Niveles elevados están asociados con resistencia a la insulina, prediabetes y síndrome metabólico. Se interpreta junto con HbA1c, insulina y triglicéridos para evaluar salud metabólica completa.",
-      "interpretation": "Tu valor de 95 mg/dL está dentro del rango óptimo funcional (75-86 mg/dL). Esto indica un buen control glucémico y metabolismo de carbohidratos saludable. Mantén una dieta baja en azúcares refinados y rica en fibra. Se recomienda monitorear HbA1c anualmente para confirmar tendencia estable."
+      "description": "Mide azúcar en sangre tras ayuno. Indicador clave de metabolismo de carbohidratos y función pancreática. Se relaciona con HbA1c e insulina.",
+      "interpretation": "Tu valor de 95 mg/dL está en rango óptimo. Mantén dieta baja en azúcares refinados y rica en fibra para preservar este buen control glucémico."
     }
   ],
-  "summary": "Resumen breve del estado general del paciente",
+  "summary": "Resumen breve del estado general",
   "categories_found": ["metabolic", "lipid"]
 }
 

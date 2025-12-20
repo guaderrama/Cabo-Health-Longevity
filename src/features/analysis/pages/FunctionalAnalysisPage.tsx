@@ -5,6 +5,8 @@ import { Analysis, Report, Patient } from '@/shared/types';
 import { ArrowLeft, Activity, FileText, Download } from 'lucide-react';
 import BiomarkerCard, { BiomarkerClassification } from '@/features/analysis/components/BiomarkerCard';
 import BiomarkerSummary from '@/features/analysis/components/BiomarkerSummary';
+import { jsPDF } from 'jspdf';
+import { toast } from '@/shared/lib/toast';
 
 export default function FunctionalAnalysisPage() {
   const { id } = useParams();
@@ -15,6 +17,7 @@ export default function FunctionalAnalysisPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [biomarkers, setBiomarkers] = useState<BiomarkerClassification[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -175,6 +178,208 @@ export default function FunctionalAnalysisPage() {
     anomalo: biomarkers.filter((b) => b.classification === 'ANOMALO').length,
   };
 
+  // Calcular resumen por categoría
+  const categoryLabels: Record<string, string> = {
+    metabolic: 'Metabólico',
+    lipid: 'Lipídico',
+    thyroid: 'Tiroideo',
+    nutritional: 'Nutricional',
+    hepatic: 'Hepático',
+    renal: 'Renal',
+    hematologic: 'Hematológico',
+    inflammatory: 'Inflamatorio',
+  };
+
+  function getCategorySummary() {
+    const summary: Record<string, { total: number; optimal: number }> = {};
+    biomarkers.forEach(b => {
+      const cat = b.category || 'other';
+      if (!summary[cat]) {
+        summary[cat] = { total: 0, optimal: 0 };
+      }
+      summary[cat].total++;
+      if (b.classification === 'OPTIMO') {
+        summary[cat].optimal++;
+      }
+    });
+    return summary;
+  }
+
+  function generatePdfReport() {
+    if (!patient || !analysis || biomarkers.length === 0) {
+      toast.error('Error', 'No hay datos suficientes para generar el PDF');
+      return;
+    }
+
+    setGeneratingPdf(true);
+
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 20;
+
+      // Header
+      doc.setFontSize(22);
+      doc.setTextColor(0, 102, 102);
+      doc.text('Cabo Health & Longevity', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 10;
+
+      doc.setFontSize(16);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Analisis Funcional Completo', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 15;
+
+      // Patient info
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Paciente: ${patient.name || 'Desconocido'}`, 20, yPos);
+      yPos += 7;
+      if (patient.email) {
+        doc.text(`Email: ${patient.email}`, 20, yPos);
+        yPos += 7;
+      }
+      doc.text(`Fecha: ${new Date(analysis.uploaded_at || new Date()).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      })}`, 20, yPos);
+      yPos += 15;
+
+      // Summary box
+      doc.setFillColor(240, 249, 250);
+      doc.rect(15, yPos - 5, pageWidth - 30, 25, 'F');
+      doc.setFontSize(14);
+      doc.setTextColor(0, 102, 102);
+      doc.text(`Total de Biomarcadores Analizados: ${biomarkers.length}`, 20, yPos + 5);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Extraidos con IA (Groq - Llama)', pageWidth - 20, yPos + 5, { align: 'right' });
+      yPos += 30;
+
+      // Classification summary
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Distribucion por Clasificacion', 20, yPos);
+      yPos += 10;
+
+      const classificationData = [
+        { label: 'Optimo', count: counts.optimo, color: [34, 139, 34] as [number, number, number] },
+        { label: 'Aceptable', count: counts.aceptable, color: [255, 193, 7] as [number, number, number] },
+        { label: 'Suboptimo', count: counts.suboptimo, color: [255, 152, 0] as [number, number, number] },
+        { label: 'Anomalo', count: counts.anomalo, color: [220, 53, 69] as [number, number, number] },
+      ];
+
+      let xPos = 20;
+      classificationData.forEach(item => {
+        const percent = biomarkers.length > 0 ? Math.round((item.count / biomarkers.length) * 100) : 0;
+        doc.setFillColor(...item.color);
+        doc.rect(xPos, yPos, 40, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.text(String(item.count), xPos + 20, yPos + 10, { align: 'center' });
+        doc.setFontSize(8);
+        doc.text(`${item.label} (${percent}%)`, xPos + 20, yPos + 17, { align: 'center' });
+        xPos += 45;
+      });
+      yPos += 30;
+
+      // Category summary
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Resumen por Categoria', 20, yPos);
+      yPos += 10;
+
+      const categorySummary = getCategorySummary();
+      doc.setFontSize(10);
+      Object.entries(categorySummary).forEach(([cat, data]) => {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        const catLabel = categoryLabels[cat] || cat;
+        const percent = data.total > 0 ? Math.round((data.optimal / data.total) * 100) : 0;
+        doc.setTextColor(0, 0, 0);
+        doc.text(`${catLabel}: ${data.total} biomarcadores - ${percent}% optimo`, 25, yPos);
+        yPos += 6;
+      });
+      yPos += 10;
+
+      // Biomarkers detail
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(0, 102, 102);
+      doc.text('Detalle de Biomarcadores', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 15;
+
+      const statusColors: Record<string, [number, number, number]> = {
+        OPTIMO: [34, 139, 34],
+        ACEPTABLE: [255, 193, 7],
+        SUBOPTIMO: [255, 152, 0],
+        ANOMALO: [220, 53, 69],
+      };
+
+      doc.setFontSize(9);
+      biomarkers.forEach((b, index) => {
+        if (yPos > 275) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        const color = statusColors[b.classification] || [0, 0, 0];
+
+        // Biomarker name
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${index + 1}. ${b.biomarker}`, 20, yPos);
+
+        // Value and classification
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...color);
+        const valueText = `${b.value} ${b.units} - ${b.classification}`;
+        doc.text(valueText, pageWidth - 20, yPos, { align: 'right' });
+
+        yPos += 5;
+
+        // Optimal range
+        if (b.ranges?.optimal) {
+          doc.setTextColor(120, 120, 120);
+          doc.setFontSize(8);
+          doc.text(`Rango optimo: ${b.ranges.optimal.min} - ${b.ranges.optimal.max} ${b.units}`, 25, yPos);
+          doc.setFontSize(9);
+          yPos += 7;
+        } else {
+          yPos += 4;
+        }
+      });
+
+      // Footer on all pages
+      const pageCount = doc.internal.pages.length - 1;
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(
+          `Cabo Health & Longevity - Pagina ${i} de ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      }
+
+      // Save
+      const fileName = `analisis_funcional_${(patient.name || 'paciente').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      toast.success('PDF Generado', `Archivo ${fileName} descargado`);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      toast.error('Error', 'No se pudo generar el PDF');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -286,6 +491,14 @@ export default function FunctionalAnalysisPage() {
             </h3>
             <div className="space-y-2">
               <button
+                onClick={generatePdfReport}
+                disabled={generatingPdf || biomarkers.length === 0}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="w-4 h-4" />
+                {generatingPdf ? 'Generando PDF...' : 'Descargar Reporte PDF'}
+              </button>
+              <button
                 onClick={() => navigate(`/doctor/analysis/${id}`)}
                 className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
               >
@@ -299,7 +512,7 @@ export default function FunctionalAnalysisPage() {
                   className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
                 >
                   <Download className="w-4 h-4" />
-                  Descargar PDF Original
+                  Ver PDF Original
                 </a>
               )}
             </div>

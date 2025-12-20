@@ -206,22 +206,48 @@ export default function FunctionalAnalysisPage() {
           </div>
         </div>
 
+        {/* Total de biomarcadores */}
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-lg font-semibold text-primary-900">Total de Biomarcadores Analizados:</span>
+              <span className="ml-2 text-3xl font-bold text-primary-600">{biomarkers.length}</span>
+            </div>
+            <div className="text-sm text-primary-700">
+              Extraídos con IA (Groq - Llama)
+            </div>
+          </div>
+        </div>
+
+        {/* Distribución por clasificación */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-success-light rounded-lg p-4 text-center">
             <div className="text-3xl font-bold text-success-dark">{counts.optimo}</div>
             <div className="text-sm text-success-dark opacity-75">Óptimo</div>
+            <div className="text-xs text-success-dark opacity-50 mt-1">
+              {biomarkers.length > 0 ? Math.round((counts.optimo / biomarkers.length) * 100) : 0}%
+            </div>
           </div>
           <div className="bg-warning-light rounded-lg p-4 text-center">
             <div className="text-3xl font-bold text-warning-dark">{counts.aceptable}</div>
             <div className="text-sm text-warning-dark opacity-75">Aceptable</div>
+            <div className="text-xs text-warning-dark opacity-50 mt-1">
+              {biomarkers.length > 0 ? Math.round((counts.aceptable / biomarkers.length) * 100) : 0}%
+            </div>
           </div>
           <div className="bg-orange-100 rounded-lg p-4 text-center">
             <div className="text-3xl font-bold text-orange-800">{counts.suboptimo}</div>
             <div className="text-sm text-orange-800 opacity-75">Subóptimo</div>
+            <div className="text-xs text-orange-800 opacity-50 mt-1">
+              {biomarkers.length > 0 ? Math.round((counts.suboptimo / biomarkers.length) * 100) : 0}%
+            </div>
           </div>
           <div className="bg-danger-light rounded-lg p-4 text-center">
             <div className="text-3xl font-bold text-danger-dark">{counts.anomalo}</div>
             <div className="text-sm text-danger-dark opacity-75">Anómalo</div>
+            <div className="text-xs text-danger-dark opacity-50 mt-1">
+              {biomarkers.length > 0 ? Math.round((counts.anomalo / biomarkers.length) * 100) : 0}%
+            </div>
           </div>
         </div>
 

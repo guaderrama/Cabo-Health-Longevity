@@ -35,7 +35,17 @@ function PrivateRoute({ children, allowedRole }: { children: React.ReactNode; al
 }
 
 function DashboardRouter() {
-  const { userRole } = useAuth();
+  const { user, userRole, loading } = useAuth();
+
+  // Mostrar loading mientras se carga la sesion o el rol del usuario
+  // CRITICAL: Mostrar spinner si hay usuario pero aun no tiene rol asignado
+  if (loading || !userRole) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   if (userRole === 'doctor') {
     return <DoctorDashboard />;
@@ -43,6 +53,7 @@ function DashboardRouter() {
     return <PatientDashboard />;
   }
 
+  // Fallback - no deberia llegar aqui si userRole es valido
   return <Navigate to="/login" replace />;
 }
 

@@ -3,7 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/shared/lib/supabase';
 import { Analysis, Report, Patient, AppError } from '@/shared/types';
 import { toast } from '@/shared/lib/toast';
-import { ArrowLeft, Check, FileText } from 'lucide-react';
+import { ArrowLeft, Check, FileText, Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+
+interface Biomarker {
+  id: string;
+  name: string;
+  value: string;
+  unit: string;
+  status: 'optimal' | 'acceptable' | 'suboptimal' | 'abnormal';
+  category: string;
+  optimal_min?: number;
+  optimal_max?: number;
+}
 
 export default function AnalysisReviewPage() {
   const { id } = useParams();
@@ -11,8 +23,10 @@ export default function AnalysisReviewPage() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [biomarkers, setBiomarkers] = useState<Biomarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const [doctorNotes, setDoctorNotes] = useState('');
   const [recommendations, setRecommendations] = useState('');
@@ -57,11 +71,199 @@ export default function AnalysisReviewPage() {
           .maybeSingle();
 
         setPatient(patientData);
+
+        // Cargar biomarcadores
+        const { data: biomarkersData } = await supabase
+          .from('biomarkers')
+          .select('*')
+          .eq('analysis_id', analysisData.id)
+          .order('category', { ascending: true });
+
+        if (biomarkersData) {
+          setBiomarkers(biomarkersData);
+        }
       }
     } catch (error) {
       console.error('Error cargando datos:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  function generatePdfReport() {
+    if (!patient || !analysis || biomarkers.length === 0) {
+      toast.error('Error', 'No hay datos suficientes para generar el PDF');
+      return;
+    }
+
+    setGeneratingPdf(true);
+
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 20;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(0, 102, 153);
+      doc.text('Cabo Health & Longevity', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 10;
+
+      doc.setFontSize(14);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Reporte de Analisis Funcional', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 15;
+
+      // Patient info
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Paciente: ${patient.name}`, 20, yPos);
+      yPos += 7;
+      doc.text(`Email: ${patient.email || 'N/A'}`, 20, yPos);
+      yPos += 7;
+      doc.text(`Fecha: ${new Date(analysis.uploaded_at).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      })}`, 20, yPos);
+      yPos += 15;
+
+      // Summary counts
+      const counts = {
+        optimal: biomarkers.filter(b => b.status === 'optimal').length,
+        acceptable: biomarkers.filter(b => b.status === 'acceptable').length,
+        suboptimal: biomarkers.filter(b => b.status === 'suboptimal').length,
+        abnormal: biomarkers.filter(b => b.status === 'abnormal').length,
+      };
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 102, 153);
+      doc.text('Resumen de Resultados', 20, yPos);
+      yPos += 10;
+
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Total de biomarcadores: ${biomarkers.length}`, 20, yPos);
+      yPos += 6;
+      doc.setTextColor(34, 139, 34);
+      doc.text(`Optimo: ${counts.optimal} (${Math.round((counts.optimal / biomarkers.length) * 100)}%)`, 20, yPos);
+      yPos += 6;
+      doc.setTextColor(255, 165, 0);
+      doc.text(`Aceptable: ${counts.acceptable} (${Math.round((counts.acceptable / biomarkers.length) * 100)}%)`, 20, yPos);
+      yPos += 6;
+      doc.setTextColor(255, 140, 0);
+      doc.text(`Suboptimo: ${counts.suboptimal} (${Math.round((counts.suboptimal / biomarkers.length) * 100)}%)`, 20, yPos);
+      yPos += 6;
+      doc.setTextColor(220, 20, 60);
+      doc.text(`Anomalo: ${counts.abnormal} (${Math.round((counts.abnormal / biomarkers.length) * 100)}%)`, 20, yPos);
+      yPos += 15;
+
+      // Biomarkers list
+      doc.setTextColor(0, 102, 153);
+      doc.setFontSize(14);
+      doc.text('Detalle de Biomarcadores', 20, yPos);
+      yPos += 10;
+
+      const statusColors: Record<string, [number, number, number]> = {
+        optimal: [34, 139, 34],
+        acceptable: [255, 165, 0],
+        suboptimal: [255, 140, 0],
+        abnormal: [220, 20, 60],
+      };
+
+      const statusLabels: Record<string, string> = {
+        optimal: 'Optimo',
+        acceptable: 'Aceptable',
+        suboptimal: 'Suboptimo',
+        abnormal: 'Anomalo',
+      };
+
+      doc.setFontSize(10);
+
+      biomarkers.forEach((b, index) => {
+        // Check if we need a new page
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        const color = statusColors[b.status] || [0, 0, 0];
+        doc.setTextColor(0, 0, 0);
+        doc.text(`${index + 1}. ${b.name}`, 20, yPos);
+
+        doc.setTextColor(...color);
+        const valueText = `${b.value} ${b.unit || ''} - ${statusLabels[b.status] || b.status}`;
+        doc.text(valueText, 120, yPos);
+
+        yPos += 6;
+
+        if (b.optimal_min != null && b.optimal_max != null) {
+          doc.setTextColor(100, 100, 100);
+          doc.setFontSize(8);
+          doc.text(`Rango optimo: ${b.optimal_min} - ${b.optimal_max} ${b.unit || ''}`, 25, yPos);
+          doc.setFontSize(10);
+          yPos += 5;
+        }
+      });
+
+      // Doctor notes if available
+      if (doctorNotes) {
+        if (yPos > 240) {
+          doc.addPage();
+          yPos = 20;
+        }
+        yPos += 10;
+        doc.setTextColor(0, 102, 153);
+        doc.setFontSize(14);
+        doc.text('Notas del Medico', 20, yPos);
+        yPos += 10;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        const notesLines = doc.splitTextToSize(doctorNotes, pageWidth - 40);
+        doc.text(notesLines, 20, yPos);
+        yPos += notesLines.length * 5 + 10;
+      }
+
+      // Recommendations if available
+      if (recommendations) {
+        if (yPos > 240) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setTextColor(0, 102, 153);
+        doc.setFontSize(14);
+        doc.text('Recomendaciones', 20, yPos);
+        yPos += 10;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        const recLines = doc.splitTextToSize(recommendations, pageWidth - 40);
+        doc.text(recLines, 20, yPos);
+      }
+
+      // Footer
+      const pageCount = doc.internal.pages.length - 1;
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(
+          `Cabo Health & Longevity - Pagina ${i} de ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      }
+
+      // Save the PDF
+      const fileName = `analisis_${patient.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      toast.success('PDF Generado', `Archivo ${fileName} descargado`);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      toast.error('Error', 'No se pudo generar el PDF');
+    } finally {
+      setGeneratingPdf(false);
     }
   }
 
@@ -232,6 +434,14 @@ export default function AnalysisReviewPage() {
             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
           >
             Cancelar
+          </button>
+          <button
+            onClick={generatePdfReport}
+            disabled={generatingPdf || biomarkers.length === 0}
+            className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-5 h-5" />
+            {generatingPdf ? 'Generando...' : 'Descargar PDF'}
           </button>
           <button
             onClick={handleApprove}

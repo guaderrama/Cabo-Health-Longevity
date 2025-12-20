@@ -134,7 +134,7 @@ async function callGroq(model: string, text: string): Promise<BiomarkerExtractio
           content: EXTRACTION_PROMPT + text
         }
       ],
-      temperature: 0.2,
+      temperature: 0,  // Determinístico: mismo input = mismo output
       max_tokens: 8000,
       response_format: { type: 'json_object' }
     }),

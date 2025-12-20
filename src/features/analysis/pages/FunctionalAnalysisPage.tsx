@@ -206,8 +206,8 @@ export default function FunctionalAnalysisPage() {
   }
 
   function generatePdfReport() {
-    if (!patient || !analysis || biomarkers.length === 0) {
-      toast.error('Error', 'No hay datos suficientes para generar el PDF');
+    if (biomarkers.length === 0) {
+      toast.error('Error', 'No hay biomarcadores para generar el PDF');
       return;
     }
 
@@ -232,13 +232,13 @@ export default function FunctionalAnalysisPage() {
       // Patient info
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
-      doc.text(`Paciente: ${patient.name || 'Desconocido'}`, 20, yPos);
+      doc.text(`Paciente: ${patient?.name || 'Desconocido'}`, 20, yPos);
       yPos += 7;
-      if (patient.email) {
+      if (patient?.email) {
         doc.text(`Email: ${patient.email}`, 20, yPos);
         yPos += 7;
       }
-      doc.text(`Fecha: ${new Date(analysis.uploaded_at || new Date()).toLocaleDateString('es-ES', {
+      doc.text(`Fecha: ${new Date(analysis?.uploaded_at || new Date()).toLocaleDateString('es-ES', {
         day: '2-digit',
         month: 'long',
         year: 'numeric'
@@ -368,7 +368,7 @@ export default function FunctionalAnalysisPage() {
       }
 
       // Save
-      const fileName = `analisis_funcional_${(patient.name || 'paciente').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `analisis_funcional_${(patient?.name || 'paciente').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
 
       toast.success('PDF Generado', `Archivo ${fileName} descargado`);

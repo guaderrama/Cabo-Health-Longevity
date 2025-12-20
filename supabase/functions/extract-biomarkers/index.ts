@@ -60,7 +60,23 @@ Para cada biomarcador:
 - category: metabolic/lipid/thyroid/nutritional/hepatic/renal/inflammatory/hematologic
 - status: optimal/acceptable/suboptimal/abnormal
 
-IMPORTANTE: Responde SOLO con JSON válido. Formato:
+INSTRUCCIONES PARA DESCRIPTION E INTERPRETATION (MUY IMPORTANTE):
+
+Para "description" genera un texto educativo de 2-3 oraciones que explique:
+- Qué mide exactamente este biomarcador
+- Qué órganos o sistemas corporales evalúa
+- Por qué es clínicamente importante
+- Con qué otros biomarcadores se relaciona
+
+Para "interpretation" genera un texto personalizado de 3-4 oraciones que incluya:
+- Evaluación del valor específico del paciente vs rangos óptimos funcionales
+- Posibles causas si está fuera del rango óptimo funcional
+- Recomendaciones prácticas de dieta o estilo de vida
+- Qué síntomas observar o cuándo hacer seguimiento
+
+IMPORTANTE: Las interpretaciones deben ser en segunda persona ("Tu valor...", "Considera...") para mayor conexión con el paciente.
+
+Responde SOLO con JSON válido. Formato:
 {
   "biomarkers": [
     {
@@ -76,8 +92,8 @@ IMPORTANTE: Responde SOLO con JSON válido. Formato:
       "acceptable_max": 99,
       "conventional_min": 65,
       "conventional_max": 99,
-      "interpretation": "Óptimo: 75-86 mg/dL para prevención metabólica",
-      "description": "Marcador clave de metabolismo de glucosa y riesgo de diabetes"
+      "description": "La glucosa en ayunas mide el nivel de azúcar en sangre después de 8-12 horas sin comer. Es el principal indicador del metabolismo de carbohidratos y función pancreática. Niveles elevados están asociados con resistencia a la insulina, prediabetes y síndrome metabólico. Se interpreta junto con HbA1c, insulina y triglicéridos para evaluar salud metabólica completa.",
+      "interpretation": "Tu valor de 95 mg/dL está dentro del rango óptimo funcional (75-86 mg/dL). Esto indica un buen control glucémico y metabolismo de carbohidratos saludable. Mantén una dieta baja en azúcares refinados y rica en fibra. Se recomienda monitorear HbA1c anualmente para confirmar tendencia estable."
     }
   ],
   "summary": "Resumen breve del estado general del paciente",
